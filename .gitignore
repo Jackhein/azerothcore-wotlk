@@ -97,5 +97,6 @@ local.properties
 #
 # ==================
 /opt/
+/opt/*
 /modules/talent_points/
 /cmake-build-debug-docker/
