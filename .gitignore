@@ -102,7 +102,7 @@ local.properties
 #  !modules/yourmodule
 #
 # ==================
-/opt/
-/opt/*
-/modules/talent_points/
+opt/
+opt/*
+modules/mod-*/
 /cmake-build-debug-docker/
