@@ -93,7 +93,7 @@ struct DefaultTargetSelector : public Acore::unary_function<Unit*, bool>
 };
 
 // Target selector for spell casts checking range, auras and attributes
-// TODO: Add more checks from Spell::CheckCast
+/// @todo: Add more checks from Spell::CheckCast
 struct SpellTargetSelector : public Acore::unary_function<Unit*, bool>
 {
 public:
@@ -332,19 +332,44 @@ public:
             targetList.resize(num);
     }
 
+    /**
+     * @brief Called when the unit enters combat
+     * (NOTE: Creature engage logic should NOT be here, but in JustEngagedWith, which happens once threat is established!)
+     *
+     * @todo Never invoked right now. Preparation for Combat Threat refactor
+     */
+    virtual void JustEnteredCombat(Unit* /*who*/) { }
+
+    /**
+     * @brief Called when the unit leaves combat
+     *
+     * @todo Never invoked right now. Preparation for Combat Threat refactor
+     */
+    virtual void JustExitedCombat() { }
+
     // Called at any Damage to any victim (before damage apply)
     virtual void DamageDealt(Unit* /*victim*/, uint32& /*damage*/, DamageEffectType /*damageType*/) { }
 
     // Called at any Damage from any attacker (before damage apply)
     // Note: it for recalculation damage or special reaction at damage
     // for attack reaction use AttackedBy called for not DOT damage in Unit::DealDamage also
-    virtual void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/, DamageEffectType /*damagetype*/, SpellSchoolMask /*damageSchoolMask*/ ) {}
+    virtual void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/, DamageEffectType /*damagetype*/, SpellSchoolMask /*damageSchoolMask*/) {}
 
     // Called when the creature receives heal
     virtual void HealReceived(Unit* /*done_by*/, uint32& /*addhealth*/) {}
 
+    // Called when the creature power updates
+    virtual void OnPowerUpdate(Powers /*power*/, int32 /*updateVal*/, int32 /*gain*/, uint32 /*currPower*/) {}
+
     // Called when the unit heals
     virtual void HealDone(Unit* /*done_to*/, uint32& /*addhealth*/) {}
+
+    // Called during damage calculations
+    virtual void OnCalculateMeleeDamageReceived(uint32& /*damage*/, Unit* /*attacker*/) {}
+    virtual void OnCalculateSpellDamageReceived(int32& /*damage*/, Unit* /*attacker*/) {}
+
+    // Called during calculation when receiving periodic healing or damage (DoT or HoT)
+    virtual void OnCalculatePeriodicTickReceived(uint32& /*damage*/, Unit* /*attacker*/) {}
 
     void AttackStartCaster(Unit* victim, float dist);
 
@@ -356,6 +381,9 @@ public:
     SpellCastResult DoCastVictim(uint32 spellId, bool triggered = false);
     SpellCastResult DoCastAOE(uint32 spellId, bool triggered = false);
     SpellCastResult DoCastRandomTarget(uint32 spellId, uint32 threatTablePosition = 0, float dist = 0.0f, bool playerOnly = true, bool triggered = false);
+
+    // Cast spell on the top threat target, which may not be the current victim.
+    SpellCastResult DoCastMaxThreat(uint32 spellId, uint32 threatTablePosition = 0, float dist = 0.0f, bool playerOnly = true, bool triggered = false);
 
     float DoGetSpellMaxRange(uint32 spellId, bool positive = false);
 

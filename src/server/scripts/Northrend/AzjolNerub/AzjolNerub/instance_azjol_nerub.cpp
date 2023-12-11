@@ -16,8 +16,10 @@
  */
 
 #include "AreaBoundary.h"
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
+#include "InstanceMapScript.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "azjol_nerub.h"
 
 DoorData const doorData[] =
@@ -32,7 +34,8 @@ DoorData const doorData[] =
 ObjectData const creatureData[] =
 {
     { NPC_KRIKTHIR_THE_GATEWATCHER, DATA_KRIKTHIR_THE_GATEWATCHER_EVENT },
-    { NPC_HADRONOX,                 DATA_HADRONOX_EVENT                 }
+    { NPC_HADRONOX,                 DATA_HADRONOX_EVENT                 },
+    { 0,                            0                                   }
 };
 
 BossBoundaryData const boundaries =
@@ -51,6 +54,7 @@ public:
     {
         instance_azjol_nerub_InstanceScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             LoadBossBoundaries(boundaries);
             LoadDoorData(doorData);
@@ -85,7 +89,7 @@ public:
                 case GO_ANUBARAK_DOORS1:
                 case GO_ANUBARAK_DOORS2:
                 case GO_ANUBARAK_DOORS3:
-                    AddDoor(go, true);
+                    AddDoor(go);
                     break;
             }
         }
@@ -98,41 +102,8 @@ public:
                 case GO_ANUBARAK_DOORS1:
                 case GO_ANUBARAK_DOORS2:
                 case GO_ANUBARAK_DOORS3:
-                    AddDoor(go, false);
+                    RemoveDoor(go);
                     break;
-            }
-        }
-
-        bool SetBossState(uint32 id, EncounterState state) override
-        {
-            return InstanceScript::SetBossState(id, state);
-        }
-
-        std::string GetSaveData() override
-        {
-            std::ostringstream saveStream;
-            saveStream << "A N " << GetBossSaveData();
-            return saveStream.str();
-        }
-
-        void Load(const char* in) override
-        {
-            if( !in )
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-            if (dataHead1 == 'A' && dataHead2 == 'N')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                        tmpState = NOT_STARTED;
-                    SetBossState(i, EncounterState(tmpState));
-                }
             }
         }
     };

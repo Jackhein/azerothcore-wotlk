@@ -73,7 +73,7 @@ function comp_configure() {
     echo "Platform: $OSTYPE"
     case "$OSTYPE" in
       darwin*)
-        OSOPTIONS=" -DMYSQL_ADD_INCLUDE_PATH=/usr/local/include -DMYSQL_LIBRARY=/usr/local/lib/libmysqlclient.dylib -DREADLINE_INCLUDE_DIR=/usr/local/opt/readline/include -DREADLINE_LIBRARY=/usr/local/opt/readline/lib/libreadline.dylib -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include -DOPENSSL_SSL_LIBRARIES=/usr/local/opt/openssl@1.1/lib/libssl.dylib -DOPENSSL_CRYPTO_LIBRARIES=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib "
+        OSOPTIONS=" -DMYSQL_ADD_INCLUDE_PATH=/usr/local/include -DMYSQL_LIBRARY=/usr/local/lib/libmysqlclient.dylib -DREADLINE_INCLUDE_DIR=/usr/local/opt/readline/include -DREADLINE_LIBRARY=/usr/local/opt/readline/lib/libreadline.dylib -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include -DOPENSSL_SSL_LIBRARIES=/usr/local/opt/openssl@3/lib/libssl.dylib -DOPENSSL_CRYPTO_LIBRARIES=/usr/local/opt/openssl@3/lib/libcrypto.dylib "
         ;;
       msys*)
         OSOPTIONS=" -DMYSQL_INCLUDE_DIR=C:\tools\mysql\current\include -DMYSQL_LIBRARY=C:\tools\mysql\current\lib\mysqlclient.lib "
@@ -143,16 +143,13 @@ function comp_compile() {
       find "$AC_BINPATH_FULL"  -mindepth 1 -maxdepth 1 -type f -exec sudo chown root:root -- {} +
       find "$AC_BINPATH_FULL"  -mindepth 1 -maxdepth 1 -type f -exec sudo chmod u+s  -- {} +
 
-      DOCKER_ETC_FOLDER=${DOCKER_ETC_FOLDER:-"env/dist/etc"}
-
-      if [[ $DOCKER = 1 && $DISABLE_DOCKER_CONF != 1 ]]; then
-        echo "Generating confs..."
-        for dockerdist in "$DOCKER_ETC_FOLDER"/*.dockerdist; do
-          base_conf="$(echo "$dockerdist" | rev | cut -f1 -d. --complement | rev)"
-          cp -nv "$base_conf.dist" "$base_conf"
-          # Move configs from .conf.dockerdist to .conf
-          conf_layer "$dockerdist" "$base_conf" " # Copied from dockerdist"
-        done
+      if [[ -n "$DOCKER" ]]; then
+          [[ -f "$confDir/worldserver.conf.dist" ]] && \
+              cp -nv "$confDir/worldserver.conf.dist" "$confDir/worldserver.conf"
+          [[ -f "$confDir/authserver.conf.dist" ]] && \
+              cp -nv "$confDir/authserver.conf.dist" "$confDir/authserver.conf"
+          [[ -f "$confDir/dbimport.conf.dist" ]] && \
+              cp -nv "$confDir/dbimport.conf.dist" "$confDir/dbimport.conf"
       fi
 
       echo "Done"
@@ -170,32 +167,4 @@ function comp_build() {
 function comp_all() {
   comp_clean
   comp_build
-}
-
-# conf_layer FILENAME FILENAME
-# Layer the configuration parameters from the first argument onto the second argument
-function conf_layer() {
-  LAYER="$1"
-  BASE="$2"
-  COMMENT="$3"
-
-  grep -E "^[a-zA-Z\.0-9]+\s*=.*$" "$LAYER" \
-    | while read -r param
-      do
-        NOSPACE="$(tr -d '[:space:]' <<< "$param")"
-        KEY="$(cut -f1 -d= <<< "$NOSPACE")"
-        VAL="$(cut -f2 -d= <<< "$NOSPACE")"
-        # if key not in base or val not in line
-        if grep -qE "^$KEY" "$BASE" && ! grep -qE "^$KEY.*=.*$VAL" "$BASE"; then
-          # Replace line
-          # Prevent issues with shell quoting 
-          sed -i \
-            's,^'"$KEY"'.*,'"$KEY = $VAL$COMMENT"',g' \
-            "$BASE"
-        else
-          # insert line
-          echo "$KEY = $VAL$COMMENT" >> "$BASE"
-        fi
-      done
-  echo "Layered $LAYER onto $BASE"
 }

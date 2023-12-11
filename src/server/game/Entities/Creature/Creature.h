@@ -82,6 +82,7 @@ public:
     [[nodiscard]] bool CanEnterWater() const override;
     [[nodiscard]] bool CanFly()  const override { return GetMovementTemplate().IsFlightAllowed() || IsFlying(); }
     [[nodiscard]] bool CanHover() const { return GetMovementTemplate().Ground == CreatureGroundMovementType::Hover || IsHovering(); }
+    [[nodiscard]] bool IsRooted() const { return GetMovementTemplate().IsRooted(); }
 
     MovementGeneratorType GetDefaultMovementType() const override { return m_defaultMovementType; }
     void SetDefaultMovementType(MovementGeneratorType mgt) { m_defaultMovementType = mgt; }
@@ -91,7 +92,7 @@ public:
     [[nodiscard]] bool HasReactState(ReactStates state) const { return (m_reactState == state); }
     void InitializeReactState();
 
-    ///// TODO RENAME THIS!!!!!
+    ///// @todo RENAME THIS!!!!!
     bool isCanInteractWithBattleMaster(Player* player, bool msg) const;
     bool isCanTrainingAndResetTalentsOf(Player* player) const;
     [[nodiscard]] bool IsValidTrainerForPlayer(Player* player, uint32* npcFlags = nullptr) const;
@@ -165,6 +166,7 @@ public:
     [[nodiscard]] uint32 GetSpellCooldown(uint32 spell_id) const;
     void ProhibitSpellSchool(SpellSchoolMask idSchoolMask, uint32 unTimeMs) override;
     [[nodiscard]] bool IsSpellProhibited(SpellSchoolMask idSchoolMask) const;
+    void ClearProhibitedSpellTimers();
 
     [[nodiscard]] bool HasSpell(uint32 spellID) const override;
 
@@ -272,8 +274,7 @@ public:
 
     void DespawnOrUnsummon(Milliseconds msTimeToDespawn, Seconds forcedRespawnTimer);
     void DespawnOrUnsummon(uint32 msTimeToDespawn = 0) { DespawnOrUnsummon(Milliseconds(msTimeToDespawn), 0s); };
-    void DespawnOnEvade();
-    void RespawnOnEvade();
+    void DespawnOnEvade(Seconds respawnDelay = 20s);
 
     [[nodiscard]] time_t const& GetRespawnTime() const { return m_respawnTime; }
     [[nodiscard]] time_t GetRespawnTimeEx() const;
@@ -283,6 +284,14 @@ public:
 
     [[nodiscard]] uint32 GetRespawnDelay() const { return m_respawnDelay; }
     void SetRespawnDelay(uint32 delay) { m_respawnDelay = delay; }
+
+    uint32 GetCombatPulseDelay() const { return m_combatPulseDelay; }
+    void SetCombatPulseDelay(uint32 delay) // (secs) interval at which the creature pulses the entire zone into combat (only works in dungeons)
+    {
+        m_combatPulseDelay = delay;
+        if (m_combatPulseTime == 0 || m_combatPulseTime > delay)
+            m_combatPulseTime = delay;
+    }
 
     [[nodiscard]] float GetWanderDistance() const { return m_wanderDistance; }
     void SetWanderDistance(float dist) { m_wanderDistance = dist; }
@@ -359,6 +368,7 @@ public:
 
     // Handling caster facing during spellcast
     void SetTarget(ObjectGuid guid = ObjectGuid::Empty) override;
+    void ClearTarget() { SetTarget(); };
     void FocusTarget(Spell const* focusSpell, WorldObject const* target);
     void ReleaseFocus(Spell const* focusSpell);
     [[nodiscard]] bool IsMovementPreventedByCasting() const override;
@@ -385,6 +395,24 @@ public:
 
     void ModifyThreatPercentTemp(Unit* victim, int32 percent, Milliseconds duration);
 
+    /**
+     * @brief Helper to resume chasing current victim.
+     *
+     * */
+    void ResumeChasingVictim() { GetMotionMaster()->MoveChase(GetVictim()); };
+
+    /**
+     * @brief Returns true if the creature is able to cast the spell.
+     *
+     * */
+    bool CanCastSpell(uint32 spellID) const;
+
+    /**
+    * @brief Helper to get the creature's summoner GUID, if it is a summon
+    *
+    * */
+    [[nodiscard]] ObjectGuid GetSummonerGUID() const;
+
     std::string GetDebugInfo() const override;
 
 protected:
@@ -409,6 +437,8 @@ protected:
     uint32 m_boundaryCheckTime;                         // (msecs) remaining time for next evade boundary check
     uint16 m_transportCheckTimer;
     uint32 lootPickPocketRestoreTime;
+    uint32 m_combatPulseTime;                           // (msecs) remaining time for next zone-in-combat pulse
+    uint32 m_combatPulseDelay;
 
     ReactStates m_reactState;                           // for AI, not charmInfo
     void RegenerateHealth();

@@ -22,8 +22,8 @@ SDComment: Should be replaced with core based AI
 SDCategory: Creatures
 EndScriptData */
 
+#include "CreatureScript.h"
 #include "PassiveAI.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 
 #define GENERIC_CREATURE_COOLDOWN   5000
@@ -48,7 +48,7 @@ public:
             IsSelfRooted = false;
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (!me->IsWithinMeleeRange(who))
                 IsSelfRooted = true;

@@ -31,8 +31,8 @@
 #include "SQLOperation.h"
 #include "Transaction.h"
 #include "WorldDatabase.h"
-#include <mysqld_error.h>
 #include <limits>
+#include <mysqld_error.h>
 
 #ifdef ACORE_DEBUG
 #include <boost/stacktrace.hpp>
@@ -73,7 +73,8 @@ DatabaseWorkerPool<T>::DatabaseWorkerPool() :
     bool isSameClientDB    = true; // Client version 3.2.3?
 #endif
 
-    WPFatal(isSupportClientDB, "AzerothCore does not support MySQL versions below 5.7 and MariaDB 10.5\nSearch the wiki for ACE00043 in Common Errors (https://www.azerothcore.org/wiki/common-errors#ace00043).");
+    WPFatal(isSupportClientDB, "AzerothCore does not support MySQL versions below 5.7 or MariaDB versions below 10.5.\n\nFound version: {} / {}. Server compiled with: {}.\nSearch the wiki for ACE00043 in Common Errors (https://www.azerothcore.org/wiki/common-errors#ace00043).",
+        mysql_get_client_info(), mysql_get_client_version(), MYSQL_VERSION_ID);
     WPFatal(isSameClientDB, "Used MySQL library version ({} id {}) does not match the version id used to compile AzerothCore (id {}).\nSearch the wiki for ACE00046 in Common Errors (https://www.azerothcore.org/wiki/common-errors#ace00046).",
         mysql_get_client_info(), mysql_get_client_version(), MYSQL_VERSION_ID);
 }
@@ -403,7 +404,8 @@ uint32 DatabaseWorkerPool<T>::OpenConnections(InternalIndex type, uint8 numConne
         }
         else if (connection->GetServerVersion() < MIN_MYSQL_SERVER_VERSION)
         {
-            LOG_ERROR("sql.driver", "AzerothCore does not support MySQL versions below 5.7 or MariaDB versions below 10.5");
+            LOG_ERROR("sql.driver", "AzerothCore does not support MySQL versions below 5.7 or MariaDB versions below 10.5.\n\nFound server version: {}. Server compiled with: {}.",
+                connection->GetServerVersion(), MYSQL_VERSION_ID);
             return 1;
         }
         else

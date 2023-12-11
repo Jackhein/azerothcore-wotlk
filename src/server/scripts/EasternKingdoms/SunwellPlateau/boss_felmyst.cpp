@@ -17,9 +17,10 @@
 
 #include "Cell.h"
 #include "CellImpl.h"
+#include "CreatureScript.h"
 #include "GridNotifiers.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "sunwell_plateau.h"
 
 enum Yells
@@ -160,9 +161,9 @@ public:
             instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_FOG_OF_CORRUPTION_CHARM);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             if (events.Empty() && events2.Empty())
                 events2.ScheduleEvent(EVENT_INTRO_2, 3000);
@@ -585,3 +586,4 @@ void AddSC_boss_felmyst()
     new spell_felmyst_fog_of_corruption_charm();
     new spell_felmyst_open_brutallus_back_doors();
 }
+

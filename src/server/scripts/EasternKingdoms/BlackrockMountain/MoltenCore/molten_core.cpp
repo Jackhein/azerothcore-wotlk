@@ -15,11 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "molten_core.h"
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "TaskScheduler.h"
+#include "molten_core.h"
 
 enum Texts
 {
@@ -226,7 +227,7 @@ struct npc_lava_spawn : public ScriptedAI
         _scheduler.CancelAll();
     }
 
-    void EnterCombat(Unit* /*who*/) override
+    void JustEngagedWith(Unit* /*who*/) override
     {
         _scheduler.Schedule(15s, [this](TaskContext context)
         {
@@ -273,3 +274,4 @@ void AddSC_molten_core()
     // Spells
     new spell_mc_play_dead();
 }
+

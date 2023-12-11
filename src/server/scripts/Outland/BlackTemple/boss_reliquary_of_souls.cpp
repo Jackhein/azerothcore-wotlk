@@ -15,9 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "Spell.h"
+#include "SpellScriptLoader.h"
 #include "black_temple.h"
 
 enum Says
@@ -183,9 +184,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
         }
 
         void JustSummoned(Creature* summon) override
@@ -250,6 +251,9 @@ public:
                     me->CastCustomSpell(SPELL_SUMMON_ENSLAVED_SOUL, SPELLVALUE_MAX_TARGETS, 1, me, false);
                     break;
             }
+
+            if (!UpdateVictim())
+                return;
         }
 
         bool CheckEvadeIfOutOfCombatArea() const override
@@ -327,7 +331,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(SUFF_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_SUFFERING, true);
@@ -437,7 +441,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(DESI_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_DESIRE, true);
@@ -529,7 +533,7 @@ public:
                     Unit::Kill(summoner, summoner);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             Talk(ANGER_SAY_FREED);
             me->CastSpell(me, SPELL_AURA_OF_ANGER, true);
@@ -787,3 +791,4 @@ void AddSC_boss_reliquary_of_souls()
     new spell_reliquary_of_souls_aura_of_anger();
     new spell_reliquary_of_souls_spite();
 }
+

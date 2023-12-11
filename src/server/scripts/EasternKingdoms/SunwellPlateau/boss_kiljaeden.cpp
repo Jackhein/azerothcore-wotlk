@@ -15,10 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
 #include "CreatureTextMgr.h"
 #include "MoveSplineInit.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "sunwell_plateau.h"
 
 enum Yells
@@ -364,7 +365,7 @@ public:
                 Talk(SAY_KJ_SLAY);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             events2.ScheduleEvent(EVENT_TEXT_SPEACH11, 26000, EVENT_GROUP_SPEACH);
             Talk(SAY_KJ_EMERGE);
@@ -398,7 +399,7 @@ public:
             switch (events2.ExecuteEvent())
             {
                 case EVENT_KILL_SELF:
-                    Unit::Kill(me, me);
+                    me->KillSelf();
                     break;
                 case EVENT_REBIRTH:
                     me->SetVisible(true);
@@ -1343,3 +1344,4 @@ void AddSC_boss_kiljaeden()
     new spell_kiljaeden_armageddon_missile();
     new spell_kiljaeden_dragon_breath();
 }
+
