@@ -22,9 +22,9 @@ SDComment:
 SDCategory: Zul'Aman
 EndScriptData */
 
+#include "InstanceMapScript.h"
 #include "InstanceScript.h"
 #include "Player.h"
-#include "ScriptMgr.h"
 #include "TemporarySummon.h"
 #include "zulaman.h"
 
@@ -91,6 +91,7 @@ public:
 
         void Initialize() override
         {
+            SetHeaders(DataHeader);
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
             QuestTimer = 0;

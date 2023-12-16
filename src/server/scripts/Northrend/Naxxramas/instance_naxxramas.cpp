@@ -15,11 +15,13 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "AreaTriggerScript.h"
 #include "CellImpl.h"
+#include "CreatureScript.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "InstanceMapScript.h"
 #include "PassiveAI.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "naxxramas.h"
 
@@ -64,6 +66,7 @@ public:
     {
         explicit instance_naxxramas_InstanceMapScript(Map* pMap) : InstanceScript(pMap)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             for (auto& i : HeiganEruption)
                 i.clear();
@@ -640,27 +643,6 @@ public:
             return 0;
         }
 
-        bool AreAllWingsCleared() const
-        {
-            return (GetBossState(BOSS_MAEXXNA) == DONE) && (GetBossState(BOSS_LOATHEB) == DONE) && (GetBossState(BOSS_THADDIUS) == DONE) && (GetBossState(BOSS_HORSEMAN) == DONE);
-        }
-
-        bool CheckRequiredBosses(uint32 bossId, Player const* /* player */) const override
-        {
-            switch (bossId)
-            {
-                case BOSS_SAPPHIRON:
-                    if (!AreAllWingsCleared())
-                    {
-                        return false;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            return true;
-        }
-
         bool SetBossState(uint32 bossId, EncounterState state) override
         {
             // pull all the trash if not killed
@@ -875,7 +857,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_ANUB:
                         if (GameObject* go = instance->GetGameObject(_anubGateGUID))
@@ -915,7 +897,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_GOTHIK:
                         if (GameObject* go = instance->GetGameObject(_gothikEnterGateGUID))
@@ -932,7 +914,7 @@ public:
                         }
                         break;
                     case BOSS_SAPPHIRON:
-                        events.ScheduleEvent(EVENT_FROSTWYRM_WATERFALL_DOOR, 5000);
+                        events.ScheduleEvent(EVENT_FROSTWYRM_WATERFALL_DOOR, 5s);
                         break;
                     case BOSS_THADDIUS:
                         if (GameObject* go = instance->GetGameObject(_thaddiusPortalGUID))
@@ -948,7 +930,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     case BOSS_HORSEMAN:
                         if (GameObject* go = instance->GetGameObject(_horsemanPortalGUID))
@@ -964,7 +946,7 @@ public:
                         {
                             go->SetGoState(GO_STATE_ACTIVE);
                         }
-                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6000);
+                        events.ScheduleEvent(EVENT_KELTHUZAD_WING_TAUNT, 6s);
                         break;
                     default:
                         break;
@@ -1119,55 +1101,14 @@ public:
             return ObjectGuid::Empty;
         }
 
-        std::string GetSaveData() override
+        void ReadSaveDataMore(std::istringstream& data) override
         {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "N X X " << GetBossSaveData() << ' ' << immortalAchievement;
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
+            data >> immortalAchievement;
         }
 
-        void Load(const char* in) override
+        void WriteSaveDataMore(std::ostringstream& data) override
         {
-            if (!in)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(in);
-
-            char dataHead1, dataHead2, dataHead3;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2 >> dataHead3;
-
-            if (dataHead1 == 'N' && dataHead2 == 'X' && dataHead3 == 'X')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS)
-                    {
-                        tmpState = NOT_STARTED;
-                    }
-                    if (i == BOSS_HORSEMAN && tmpState == DONE)
-                    {
-                        _horsemanLoadDoneState = true;
-                    }
-                    SetBossState(i, EncounterState(tmpState));
-                }
-                loadStream >> immortalAchievement;
-
-                OUT_LOAD_INST_DATA_COMPLETE;
-            }
-            else
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-            }
+            data << immortalAchievement;
         }
     };
 };
@@ -1272,3 +1213,4 @@ void AddSC_instance_naxxramas()
     new boss_naxxramas_misc();
     new at_naxxramas_hub_portal();
 }
+

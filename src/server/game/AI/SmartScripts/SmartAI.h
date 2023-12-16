@@ -80,7 +80,7 @@ public:
     void JustReachedHome() override;
 
     // Called for reaction at enter to combat if not in combat yet (enemy can be nullptr)
-    void EnterCombat(Unit* enemy) override;
+    void JustEngagedWith(Unit* enemy) override;
 
     // Called for reaction at stopping attack at no attackers or targets
     void EnterEvadeMode(EvadeReason why = EVADE_REASON_OTHER) override;
@@ -96,6 +96,9 @@ public:
 
     // Called when a summoned unit dies
     void SummonedCreatureDies(Creature* summon, Unit* killer) override;
+
+    // Called when a summoned unit evades
+    void SummonedCreatureEvade(Creature* summon) override;
 
     // Tell creature to attack and follow the victim
     void AttackStart(Unit* who) override;
@@ -125,7 +128,7 @@ public:
     void MovementInform(uint32 MovementType, uint32 Data) override;
 
     // Called when creature is summoned by another unit
-    void IsSummonedBy(Unit* summoner) override;
+    void IsSummonedBy(WorldObject* summoner) override;
 
     // Called at any Damage to any victim (before damage apply)
     void DamageDealt(Unit* doneTo, uint32& damage, DamageEffectType damagetyp) override;
@@ -274,8 +277,17 @@ public:
     void EventInform(uint32 eventId) override;
     void SpellHit(Unit* unit, SpellInfo const* spellInfo) override;
 
+    // Called when the gameobject summon successfully other creature
+    void JustSummoned(Creature* creature) override;
+
+    // Called when a summoned creature dissapears (UnSummoned)
+    void SummonedCreatureDespawn(Creature* unit) override;
+
     // Called when a summoned unit dies
     void SummonedCreatureDies(Creature* summon, Unit* killer) override;
+
+    // Called when a summoned unit evades
+    void SummonedCreatureEvade(Creature* summon) override;
 
 protected:
     SmartScript mScript;

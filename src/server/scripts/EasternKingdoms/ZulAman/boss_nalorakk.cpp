@@ -23,9 +23,9 @@ SDCategory: Zul'Aman
 EndScriptData */
 
 #include "CellImpl.h"
+#include "CreatureScript.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "zulaman.h"
 
@@ -280,7 +280,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             if (instance)
                 instance->SetData(DATA_NALORAKKEVENT, IN_PROGRESS);

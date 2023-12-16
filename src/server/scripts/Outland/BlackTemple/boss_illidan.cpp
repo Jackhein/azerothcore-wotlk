@@ -15,9 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "ScriptedEscortAI.h"
+#include "SpellScriptLoader.h"
 #include "black_temple.h"
 
 enum Says
@@ -321,10 +322,10 @@ public:
                 events.ScheduleEvent(EVENT_SPELL_FRENZY, 40000);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             summons.DespawnAll();
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             ScheduleNormalEvents(1);
             events.ScheduleEvent(EVENT_SPELL_BERSERK, 25 * MINUTE * IN_MILLISECONDS);
             events.ScheduleEvent(EVENT_SUMMON_MINIONS, 1000);
@@ -1426,3 +1427,4 @@ void AddSC_boss_illidan()
     new spell_illidan_cage_trap();
     new spell_illidan_cage_trap_stun();
 }
+

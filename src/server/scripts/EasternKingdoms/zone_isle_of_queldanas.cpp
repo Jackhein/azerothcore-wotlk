@@ -15,6 +15,14 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
+#include "PassiveAI.h"
+#include "Pet.h"
+#include "Player.h"
+#include "ScriptedCreature.h"
+#include "SpellInfo.h"
+#include "SpellScript.h"
+#include "SpellScriptLoader.h"
 /* ScriptData
 SDName: Isle_of_Queldanas
 SD%Complete: 100
@@ -26,14 +34,6 @@ EndScriptData */
 npc_converted_sentry
 npc_greengill_slave
 EndContentData */
-
-#include "PassiveAI.h"
-#include "Pet.h"
-#include "Player.h"
-#include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "SpellInfo.h"
-#include "SpellScript.h"
 
 /*###### OUR: ######*/
 
@@ -658,7 +658,7 @@ public:
     {
         npc_greengill_slaveAI(Creature* creature) : ScriptedAI(creature) { }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
 
         void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
@@ -698,3 +698,4 @@ void AddSC_isle_of_queldanas()
     // THEIR:
     new npc_greengill_slave();
 }
+

@@ -15,11 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "utgarde_keep.h"
+#include "CreatureScript.h"
 #include "GameObjectAI.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "Vehicle.h"
+#include "utgarde_keep.h"
 
 class npc_dragonflayer_forge_master : public CreatureScript
 {
@@ -73,7 +74,7 @@ public:
             me->SaveRespawnTime();
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             if (pInstance)
             {
@@ -124,9 +125,9 @@ public:
         void Reset() override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_REND, urand(2000, 3000));
-            _events.ScheduleEvent(EVENT_FLAME_BREATH, urand(5500, 7000));
-            _events.ScheduleEvent(EVENT_KNOCKAWAY, urand(3500, 6000));
+            _events.ScheduleEvent(EVENT_REND, 2s, 3s);
+            _events.ScheduleEvent(EVENT_FLAME_BREATH, 5500ms, 7000ms);
+            _events.ScheduleEvent(EVENT_KNOCKAWAY, 3500ms, 6000ms);
         }
 
         void MovementInform(uint32 type, uint32 id) override
@@ -173,15 +174,15 @@ public:
                 {
                     case EVENT_REND:
                         DoCast(SPELL_REND);
-                        _events.ScheduleEvent(EVENT_REND, urand(15000, 20000));
+                        _events.ScheduleEvent(EVENT_REND, 15s, 20s);
                         break;
                     case EVENT_FLAME_BREATH:
                         DoCast(SPELL_FLAME_BREATH);
-                        _events.ScheduleEvent(EVENT_FLAME_BREATH, urand(11000, 12000));
+                        _events.ScheduleEvent(EVENT_FLAME_BREATH, 11s, 12s);
                         break;
                     case EVENT_KNOCKAWAY:
                         DoCast(SPELL_KNOCK_AWAY);
-                        _events.ScheduleEvent(EVENT_KNOCKAWAY, urand(7000, 8500));
+                        _events.ScheduleEvent(EVENT_KNOCKAWAY, 7000ms, 8500ms);
                         break;
                     default:
                         break;
@@ -216,7 +217,7 @@ public:
     {
         PrepareAuraScript(spell_ticking_time_bomb_AuraScript);
 
-        bool Validate(SpellInfo const* /*spellEntry*/) override
+        bool Validate(SpellInfo const* /*spellInfo*/) override
         {
             return ValidateSpellInfo({ SPELL_TICKING_TIME_BOMB_EXPLODE });
         }
@@ -248,3 +249,4 @@ void AddSC_utgarde_keep()
 
     new spell_ticking_time_bomb();
 }
+

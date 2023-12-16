@@ -15,8 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "AreaTriggerScript.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "WorldSession.h"
 #include "sunwell_plateau.h"
 
@@ -82,13 +84,13 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
             if (who->GetEntry() == NPC_MADRIGOSA)
                 return;
 
             Talk(YELL_AGGRO);
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
 
             events.ScheduleEvent(EVENT_SPELL_SLASH, 11000);
             events.ScheduleEvent(EVENT_SPELL_STOMP, 30000);
@@ -548,3 +550,4 @@ void AddSC_boss_brutallus()
     new spell_brutallus_burn();
     new AreaTrigger_at_sunwell_madrigosa();
 }
+

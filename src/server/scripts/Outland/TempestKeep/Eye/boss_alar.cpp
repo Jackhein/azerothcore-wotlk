@@ -15,9 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
 #include "MoveSplineInit.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "WaypointMgr.h"
 #include "the_eye.h"
 
@@ -117,9 +118,9 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             events.ScheduleEvent(EVENT_SWITCH_PLATFORM, 0);
         }
 
@@ -501,3 +502,4 @@ void AddSC_boss_alar()
     new spell_alar_ember_blast_death();
     new spell_alar_dive_bomb();
 }
+

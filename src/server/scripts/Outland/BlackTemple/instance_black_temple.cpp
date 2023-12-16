@@ -15,8 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
+#include "InstanceMapScript.h"
 #include "InstanceScript.h"
-#include "ScriptMgr.h"
+#include "SpellScriptLoader.h"
 #include "black_temple.h"
 
 DoorData const doorData[] =
@@ -64,6 +66,7 @@ public:
     {
         instance_black_temple_InstanceMapScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             LoadDoorData(doorData);
             LoadBossBoundaries(boundaries);
@@ -155,7 +158,7 @@ public:
                 case GO_ILLIDAN_GATE:
                 case GO_ILLIDAN_DOOR_R:
                 case GO_ILLIDAN_DOOR_L:
-                    AddDoor(go, true);
+                    AddDoor(go);
                     break;
             }
         }
@@ -177,7 +180,7 @@ public:
                 case GO_ILLIDAN_GATE:
                 case GO_ILLIDAN_DOOR_R:
                 case GO_ILLIDAN_DOOR_L:
-                    AddDoor(go, false);
+                    RemoveDoor(go);
                     break;
             }
         }
@@ -227,49 +230,6 @@ public:
             }
 
             return true;
-        }
-
-        std::string GetSaveData() override
-        {
-            OUT_SAVE_INST_DATA;
-
-            std::ostringstream saveStream;
-            saveStream << "B T " << GetBossSaveData();
-
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return saveStream.str();
-        }
-
-        void Load(char const* str) override
-        {
-            if (!str)
-            {
-                OUT_LOAD_INST_DATA_FAIL;
-                return;
-            }
-
-            OUT_LOAD_INST_DATA(str);
-
-            char dataHead1, dataHead2;
-
-            std::istringstream loadStream(str);
-            loadStream >> dataHead1 >> dataHead2;
-
-            if (dataHead1 == 'B' && dataHead2 == 'T')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                        tmpState = NOT_STARTED;
-                    SetBossState(i, EncounterState(tmpState));
-                }
-            }
-            else
-                OUT_LOAD_INST_DATA_FAIL;
-
-            OUT_LOAD_INST_DATA_COMPLETE;
         }
 
     protected:
@@ -699,3 +659,4 @@ void AddSC_instance_black_temple()
     new spell_black_temple_curse_of_vitality();
     new spell_black_temple_dementia();
 }
+
