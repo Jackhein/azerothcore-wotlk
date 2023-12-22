@@ -16,12 +16,13 @@
  */
 
 #include "Containers.h"
+#include "CreatureScript.h"
 #include "ObjectAccessor.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "SpellAuras.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "molten_core.h"
 
 enum Texts
@@ -69,12 +70,12 @@ public:
             massEruptionTimer = 600000;
         }
 
-        void EnterCombat(Unit* /*attacker*/) override
+        void JustEngagedWith(Unit* /*attacker*/) override
         {
-            _EnterCombat();
+            _JustEngagedWith();
             DoCastSelf(SPELL_SEPARATION_ANXIETY, true);
-            events.ScheduleEvent(EVENT_ANTIMAGIC_PULSE, 15000);
-            events.ScheduleEvent(EVENT_MAGMA_SHACKLES, 10000);
+            events.ScheduleEvent(EVENT_ANTIMAGIC_PULSE, 15s);
+            events.ScheduleEvent(EVENT_MAGMA_SHACKLES, 10s);
             massEruptionTimer = 600000; // 10 mins
         }
 
@@ -253,3 +254,4 @@ void AddSC_boss_garr()
     new spell_garr_separation_nexiety();
     new spell_garr_frenzy();
 }
+

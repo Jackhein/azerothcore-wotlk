@@ -15,34 +15,19 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AreaBoundary.h"
 #include "CreatureAI.h"
+#include "AreaBoundary.h"
 #include "Creature.h"
 #include "CreatureAIImpl.h"
 #include "CreatureGroups.h"
 #include "CreatureTextMgr.h"
+#include "GameObjectAI.h"
 #include "Log.h"
 #include "MapReference.h"
 #include "Player.h"
-#include "Vehicle.h"
 #include "ScriptMgr.h"
-#include "Language.h"
+#include "Vehicle.h"
 #include "ZoneScript.h"
-
-class PhasedRespawn : public BasicEvent
-{
-public:
-    PhasedRespawn(Creature& owner) : BasicEvent(), _owner(owner) {}
-
-    bool Execute(uint64 /*eventTime*/, uint32 /*updateTime*/) override
-    {
-        _owner.RespawnOnEvade();
-        return true;
-    }
-
-private:
-    Creature& _owner;
-};
 
 //Disable CreatureAI when charmed
 void CreatureAI::OnCharmed(bool /*apply*/)
@@ -55,9 +40,26 @@ void CreatureAI::OnCharmed(bool /*apply*/)
 AISpellInfoType* UnitAI::AISpellInfo;
 AISpellInfoType* GetAISpellInfo(uint32 i) { return &CreatureAI::AISpellInfo[i]; }
 
-void CreatureAI::Talk(uint8 id, WorldObject const* target /*= nullptr*/)
+/**
+ * @brief Causes the creature to talk/say the text assigned to their entry in the `creature_text` database table.
+ *
+ * @param uint8 id Text ID from `creature_text`.
+ * @param WorldObject target The target of the speech, in case it has elements such as $n, where the target's name will be referrenced.
+ * @param Milliseconds delay Delay until the creature says the text line. Creatures will talk immediately by default.
+ */
+void CreatureAI::Talk(uint8 id, WorldObject const* target /*= nullptr*/, Milliseconds delay /*= 0s*/)
 {
-    sCreatureTextMgr->SendChat(me, id, target);
+    if (delay > Seconds::zero())
+    {
+        me->m_Events.AddEventAtOffset([this, id, target]()
+        {
+            sCreatureTextMgr->SendChat(me, id, target);
+        }, delay);
+    }
+    else
+    {
+        sCreatureTextMgr->SendChat(me, id, target);
+    }
 }
 
 inline bool IsValidCombatTarget(Creature* source, Player* target)
@@ -221,12 +223,11 @@ void CreatureAI::EnterEvadeMode(EvadeReason why)
         me->GetVehicleKit()->Reset(true);
     }
 
-    // despawn bosses at reset - only verified tbc/woltk bosses with this reset type - add bosses in last line respectively (dungeon/raid) and increase array limit
+    // despawn bosses at reset - only verified tbc/woltk bosses with this reset type
     CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(me->GetEntry());
     if (cInfo && cInfo->HasFlagsExtra(CREATURE_FLAG_EXTRA_HARD_RESET))
     {
         me->DespawnOnEvade();
-        me->m_Events.AddEvent(new PhasedRespawn(*me), me->m_Events.CalculateTime(20000));
     }
 
     sScriptMgr->OnUnitEnterEvadeMode(me, why);
@@ -319,6 +320,21 @@ bool CreatureAI::_EnterEvadeMode(EvadeReason /*why*/)
     else if (CreatureGroup* formation = me->GetFormation())
     {
         formation->MemberEvaded(me);
+    }
+
+    if (TempSummon* summon = me->ToTempSummon())
+    {
+        if (WorldObject* summoner = summon->GetSummoner())
+        {
+            if (summoner->ToCreature() && summoner->ToCreature()->IsAIEnabled)
+            {
+                summoner->ToCreature()->AI()->SummonedCreatureEvade(me);
+            }
+            else if (summoner->ToGameObject() && summoner->ToGameObject()->AI())
+            {
+                summoner->ToGameObject()->AI()->SummonedCreatureEvade(me);
+            }
+        }
     }
 
     return true;

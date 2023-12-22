@@ -37,7 +37,7 @@ WMOAreaTableEntry const* GetWMOAreaTableEntryByTripple(int32 rootid, int32 adtid
 
 uint32 GetVirtualMapForMapAndZone(uint32 mapid, uint32 zoneId);
 
-enum ContentLevels
+enum ContentLevels : uint8
 {
     CONTENT_1_60 = 0,
     CONTENT_61_70,
@@ -124,6 +124,7 @@ extern DBCStorage <GtRegenHPPerSptEntry>         sGtRegenHPPerSptStore;
 extern DBCStorage <GtRegenMPPerSptEntry>         sGtRegenMPPerSptStore;
 extern DBCStorage <HolidaysEntry>                sHolidaysStore;
 extern DBCStorage <ItemBagFamilyEntry>           sItemBagFamilyStore;
+extern DBCStorage <ItemEntry>                    sItemStore;
 extern DBCStorage <ItemDisplayInfoEntry>         sItemDisplayInfoStore;
 extern DBCStorage <ItemExtendedCostEntry>        sItemExtendedCostStore;
 extern DBCStorage <ItemLimitCategoryEntry>       sItemLimitCategoryStore;
@@ -138,6 +139,8 @@ extern DBCStorage <MapEntry>                     sMapStore;
 //extern DBCStorage <MapDifficultyEntry>           sMapDifficultyStore; -- use GetMapDifficultyData insteed
 extern MapDifficultyMap                          sMapDifficultyMap;
 extern DBCStorage <MovieEntry>                   sMovieStore;
+extern DBCStorage <NamesReservedEntry>           sNamesReservedStore;
+extern DBCStorage <NamesProfanityEntry>          sNamesProfanityStore;
 extern DBCStorage <OverrideSpellDataEntry>       sOverrideSpellDataStore;
 extern DBCStorage <PowerDisplayEntry>            sPowerDisplayStore;
 extern DBCStorage <QuestSortEntry>               sQuestSortStore;

@@ -15,7 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "culling_of_stratholme.h"
 
@@ -75,7 +75,7 @@ public:
 
         void JustSummoned(Creature* cr) override { summons.Summon(cr); }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             me->InterruptNonMeleeSpells(false);
             events.ScheduleEvent(EVENT_SPELL_VOID_STRIKE, 8000);

@@ -15,10 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
 #include "Player.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "naxxramas.h"
 
 enum Spells
@@ -110,16 +111,16 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             me->SetInCombatWithZone();
-            events.ScheduleEvent(EVENT_MORTAL_WOUND, 10000);
-            events.ScheduleEvent(EVENT_ENRAGE, 22000);
+            events.ScheduleEvent(EVENT_MORTAL_WOUND, 10s);
+            events.ScheduleEvent(EVENT_ENRAGE, 22s);
             events.ScheduleEvent(EVENT_DECIMATE, RAID_MODE(110000, 90000));
-            events.ScheduleEvent(EVENT_BERSERK, 360000);
-            events.ScheduleEvent(EVENT_SUMMON_ZOMBIE, 10000);
-            events.ScheduleEvent(EVENT_CAN_EAT_ZOMBIE, 1000);
+            events.ScheduleEvent(EVENT_BERSERK, 6min);
+            events.ScheduleEvent(EVENT_SUMMON_ZOMBIE, 10s);
+            events.ScheduleEvent(EVENT_CAN_EAT_ZOMBIE, 1s);
         }
 
         void JustSummoned(Creature* summon) override
@@ -189,11 +190,11 @@ public:
                 case EVENT_ENRAGE:
                     Talk(EMOTE_ENRAGE);
                     me->CastSpell(me, RAID_MODE(SPELL_ENRAGE_10, SPELL_ENRAGE_25), true);
-                    events.RepeatEvent(22000);
+                    events.Repeat(22s);
                     break;
                 case EVENT_MORTAL_WOUND:
                     me->CastSpell(me->GetVictim(), SPELL_MORTAL_WOUND, false);
-                    events.RepeatEvent(10000);
+                    events.Repeat(10s);
                     break;
                 case EVENT_DECIMATE:
                     Talk(EMOTE_DECIMATE);
@@ -218,7 +219,7 @@ public:
                             }
                             (rand == 2 ? rand = 0 : rand++);
                         }
-                        events.RepeatEvent(10000);
+                        events.Repeat(10s);
                         break;
                     }
                 case EVENT_CAN_EAT_ZOMBIE:
@@ -282,3 +283,4 @@ void AddSC_boss_gluth()
     new boss_gluth();
     new spell_gluth_decimate();
 }
+

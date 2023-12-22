@@ -15,8 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
+#include "InstanceMapScript.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "drak_tharon_keep.h"
 
 DoorData const doorData[] =
@@ -37,6 +39,7 @@ public:
     {
         instance_drak_tharon_keep_InstanceScript(Map* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             SetBossNumber(MAX_ENCOUNTERS);
             LoadDoorData(doorData);
         }
@@ -49,7 +52,7 @@ public:
                 case GO_NOVOS_CRYSTAL_2:
                 case GO_NOVOS_CRYSTAL_3:
                 case GO_NOVOS_CRYSTAL_4:
-                    AddDoor(go, true);
+                    AddDoor(go);
                     break;
             }
         }
@@ -62,36 +65,8 @@ public:
                 case GO_NOVOS_CRYSTAL_2:
                 case GO_NOVOS_CRYSTAL_3:
                 case GO_NOVOS_CRYSTAL_4:
-                    AddDoor(go, false);
+                    RemoveDoor(go);
                     break;
-            }
-        }
-
-        std::string GetSaveData() override
-        {
-            std::ostringstream saveStream;
-            saveStream << "D K " << GetBossSaveData();
-            return saveStream.str();
-        }
-
-        void Load(const char* in) override
-        {
-            if( !in )
-                return;
-
-            char dataHead1, dataHead2;
-            std::istringstream loadStream(in);
-            loadStream >> dataHead1 >> dataHead2;
-            if (dataHead1 == 'D' && dataHead2 == 'K')
-            {
-                for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                {
-                    uint32 tmpState;
-                    loadStream >> tmpState;
-                    if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                        tmpState = NOT_STARTED;
-                    SetBossState(i, EncounterState(tmpState));
-                }
             }
         }
     };

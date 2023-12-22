@@ -15,9 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "AreaTriggerScript.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "SpellScriptLoader.h"
 #include "sunwell_plateau.h"
 
 enum Quotes
@@ -123,9 +125,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             if (Creature* alythess = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_GRAND_WARLOCK_ALYTHESS)))
                 if (alythess->IsAlive() && !alythess->IsInCombat())
                     alythess->AI()->AttackStart(who);
@@ -271,9 +273,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             if (Creature* scorlash = ObjectAccessor::GetCreature(*me, instance->GetGuidData(NPC_LADY_SACROLASH)))
                 if (scorlash->IsAlive() && !scorlash->IsInCombat())
                     scorlash->AI()->AttackStart(who);
@@ -524,3 +526,4 @@ void AddSC_boss_eredar_twins()
     new spell_eredar_twins_blaze();
     new AreaTrigger_at_sunwell_eredar_twins();
 }
+

@@ -26,6 +26,8 @@
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
 
+#define DataHeader "BT"
+
 #define BlackTempleScriptName "instance_black_temple"
 
 enum DataTypes
@@ -102,5 +104,7 @@ inline AI* GetBlackTempleAI(T* obj)
 {
     return GetInstanceAI<AI>(obj, BlackTempleScriptName);
 }
+
+#define RegisterBlackTempleCreatureAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetBlackTempleAI)
 
 #endif // BLACK_TEMPLE_H_

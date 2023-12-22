@@ -15,8 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
+#include "SpellScriptLoader.h"
 #include "gundrak.h"
 
 enum Spells
@@ -114,7 +115,7 @@ public:
             {
                 me->SetInCombatWithZone();
                 summons.DoAction(ACTION_MERGE);
-                events.ScheduleEvent(EVENT_COLOSSUS_START_FIGHT, 3500);
+                events.ScheduleEvent(EVENT_COLOSSUS_START_FIGHT, 3500ms);
             }
         }
 
@@ -140,12 +141,12 @@ public:
             me->CastSpell(me, SPELL_FREEZE_ANIM, true);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
-            events.ScheduleEvent(EVENT_COLOSSUS_MIGHTY_BLOW, 10000);
-            events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_1, 1000);
-            events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_2, 1000);
+            BossAI::JustEngagedWith(who);
+            events.ScheduleEvent(EVENT_COLOSSUS_MIGHTY_BLOW, 10s);
+            events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_1, 1s);
+            events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_2, 1s);
         }
 
         void JustSummoned(Creature* summon) override
@@ -170,7 +171,7 @@ public:
         {
             summons.Despawn(summon);
             if (summon->GetEntry() == NPC_DRAKKARI_ELEMENTAL)
-                Unit::Kill(me, me);
+                me->KillSelf();
         }
 
         void SummonedCreatureDespawn(Creature* summon) override
@@ -208,7 +209,7 @@ public:
                     break;
                 case EVENT_COLOSSUS_MIGHTY_BLOW:
                     me->CastSpell(me->GetVictim(), SPELL_MIGHTY_BLOW, false);
-                    events.ScheduleEvent(EVENT_COLOSSUS_MIGHTY_BLOW, 10000);
+                    events.ScheduleEvent(EVENT_COLOSSUS_MIGHTY_BLOW, 10s);
                     break;
                 case EVENT_COLOSSUS_HEALTH_1:
                     if (me->HealthBelowPct(51))
@@ -219,7 +220,7 @@ public:
                         me->GetMotionMaster()->Clear();
                         break;
                     }
-                    events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_1, 1000);
+                    events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_1, 1s);
                     break;
                 case EVENT_COLOSSUS_HEALTH_2:
                     if (me->HealthBelowPct(21))
@@ -230,7 +231,7 @@ public:
                         me->GetMotionMaster()->Clear();
                         break;
                     }
-                    events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_2, 1000);
+                    events.ScheduleEvent(EVENT_COLOSSUS_HEALTH_2, 1s);
                     break;
             }
 
@@ -253,9 +254,9 @@ public:
     {
         boss_drakkari_elementalAI(Creature* pCreature) : ScriptedAI(pCreature)
         {
-            events.ScheduleEvent(EVENT_ELEMENTAL_HEALTH, 1000);
-            events.ScheduleEvent(EVENT_ELEMENTAL_SURGE, 7000);
-            events.ScheduleEvent(EVENT_ELEMENTAL_VOLLEY, 0);
+            events.ScheduleEvent(EVENT_ELEMENTAL_HEALTH, 1s);
+            events.ScheduleEvent(EVENT_ELEMENTAL_SURGE, 7s);
+            events.ScheduleEvent(EVENT_ELEMENTAL_VOLLEY, 0ms);
         }
 
         EventMap events;
@@ -276,7 +277,7 @@ public:
             Talk(EMOTE_ALTAR);
         }
 
-        void EnterCombat(Unit*) override
+        void JustEngagedWith(Unit*) override
         {
         }
 
@@ -301,13 +302,13 @@ public:
                         events.Reset();
                         break;
                     }
-                    events.ScheduleEvent(EVENT_ELEMENTAL_HEALTH, 1000);
+                    events.ScheduleEvent(EVENT_ELEMENTAL_HEALTH, 1s);
                     break;
                 case EVENT_ELEMENTAL_SURGE:
                     Talk(SAY_SURGE);
                     me->CastSpell(me, SPELL_SURGE_VISUAL, true);
                     me->CastSpell(me->GetVictim(), SPELL_SURGE, false);
-                    events.ScheduleEvent(EVENT_ELEMENTAL_SURGE, 15000);
+                    events.ScheduleEvent(EVENT_ELEMENTAL_SURGE, 15s);
                     break;
                 case EVENT_ELEMENTAL_VOLLEY:
                     me->CastSpell(me, SPELL_MOJO_VOLLEY, true);
@@ -340,8 +341,8 @@ public:
         void Reset() override
         {
             events.Reset();
-            events.ScheduleEvent(EVENT_MOJO_MOJO_PUDDLE, 13000);
-            events.ScheduleEvent(EVENT_MOJO_MOJO_WAVE, 15000);
+            events.ScheduleEvent(EVENT_MOJO_MOJO_PUDDLE, 13s);
+            events.ScheduleEvent(EVENT_MOJO_MOJO_WAVE, 15s);
         }
 
         void MoveInLineOfSight(Unit* who) override
@@ -389,13 +390,13 @@ public:
                 case EVENT_MOJO_MOJO_PUDDLE:
                     {
                         me->CastSpell(me, SPELL_MOJO_PUDDLE, false);
-                        events.ScheduleEvent(EVENT_MOJO_MOJO_PUDDLE, 13000);
+                        events.ScheduleEvent(EVENT_MOJO_MOJO_PUDDLE, 13s);
                         break;
                     }
                 case EVENT_MOJO_MOJO_WAVE:
                     {
                         me->CastSpell(me->GetVictim(), SPELL_MOJO_WAVE, false);
-                        events.ScheduleEvent(EVENT_MOJO_MOJO_WAVE, 15000);
+                        events.ScheduleEvent(EVENT_MOJO_MOJO_WAVE, 15s);
                         break;
                     }
             }
@@ -497,3 +498,4 @@ void AddSC_boss_drakkari_colossus()
     new spell_drakkari_colossus_surge();
     new spell_drakkari_colossus_face_me();
 }
+

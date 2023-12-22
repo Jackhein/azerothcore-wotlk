@@ -15,10 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "hyjal.h"
 #include "hyjal_trash.h"
 
@@ -78,7 +79,7 @@ public:
                 instance->SetData(DATA_KAZROGALEVENT, NOT_STARTED);
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             if (IsEvent)
                 instance->SetData(DATA_KAZROGALEVENT, IN_PROGRESS);
@@ -228,3 +229,4 @@ void AddSC_boss_kazrogal()
     new boss_kazrogal();
     new spell_mark_of_kazrogal();
 }
+

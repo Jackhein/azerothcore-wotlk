@@ -18,6 +18,7 @@
 #ifndef DEF_AHNKAHET_H
 #define DEF_AHNKAHET_H
 
+#define DataHeader "AK"
 #define AhnKahetScriptName "instance_ahnkahet"
 constexpr uint32 MAX_ENCOUNTER = 5;
 enum AhnkahetData
@@ -32,8 +33,6 @@ enum AhnkahetData
     // Other data
     // Teldram encounter related
     DATA_PRINCE_TALDARAM_PLATFORM,
-    DATA_TELDRAM_SPHERE1,
-    DATA_TELDRAM_SPHERE2,
 };
 
 enum AhnKahetCreatures
@@ -63,6 +62,18 @@ enum AhnkahetObjects
 enum AhnKahetActions
 {
     ACTION_REMOVE_PRISON            = -1
+};
+
+enum AhnKahetTexts
+{
+    SAY_SPHERE_ACTIVATED            = 0
+};
+
+enum AhnKahetPersistentData
+{
+    DATA_TELDRAM_SPHERE1,
+    DATA_TELDRAM_SPHERE2,
+    MAX_PERSISTENT_DATA
 };
 
 template <class AI, class T>

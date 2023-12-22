@@ -28,12 +28,13 @@ quest_a_pawn_on_the_eternal_pawn
 EndContentData */
 
 #include "AccountMgr.h"
+#include "CreatureScript.h"
 #include "GameObject.h"
 #include "GameObjectAI.h"
+#include "GameObjectScript.h"
 #include "Group.h"
 #include "ObjectMgr.h"
 #include "Player.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
 #include "Spell.h"
@@ -656,7 +657,7 @@ public:
             hasTarget = false;
         }
 
-        void EnterCombat(Unit* /*who*/) override { }
+        void JustEngagedWith(Unit* /*who*/) override { }
         void JustDied(Unit* /*slayer*/) override;
 
         void UpdateAI(uint32 diff) override
@@ -1078,7 +1079,7 @@ public:
 
         bool GossipSelect(Player* player, uint32 sender, uint32 action) override
         {
-            Seconds respawnTimer = 0s;
+            Seconds respawnTimer{};
             player->PlayerTalkClass->SendCloseGossip();
 
             Creature* lastSpawn = ObjectAccessor::GetCreature(*me, _creatureGuid);

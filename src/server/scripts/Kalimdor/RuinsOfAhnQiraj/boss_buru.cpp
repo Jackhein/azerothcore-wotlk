@@ -15,9 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ScriptMgr.h"
+#include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "TaskScheduler.h"
 #include "ruins_of_ahnqiraj.h"
 
@@ -78,9 +79,9 @@ struct boss_buru : public BossAI
             respawn ? egg->Respawn() : Unit::Kill(me, egg);
     }
 
-    void EnterCombat(Unit* who) override
+    void JustEngagedWith(Unit* who) override
     {
-        BossAI::EnterCombat(who);
+        BossAI::JustEngagedWith(who);
         me->AddThreat(who, 1000000.f);
         Talk(EMOTE_TARGET, who);
         DoCastSelf(SPELL_THORNS);
@@ -193,7 +194,7 @@ struct npc_buru_egg : public ScriptedAI
         me->SetControlled(true, UNIT_STATE_STUNNED);
     }
 
-    void EnterCombat(Unit* attacker) override
+    void JustEngagedWith(Unit* attacker) override
     {
         if (Creature* buru = _instance->GetCreature(DATA_BURU))
         {
@@ -270,3 +271,4 @@ void AddSC_boss_buru()
     RegisterRuinsOfAhnQirajCreatureAI(npc_buru_egg);
     RegisterSpellScript(spell_egg_explosion);
 }
+

@@ -15,10 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
 #include "Player.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "SpellScriptLoader.h"
 #include "sunwell_plateau.h"
 
 enum Spells
@@ -86,9 +87,9 @@ public:
             me->SetVisible(true);
         }
 
-        void EnterCombat(Unit* who) override
+        void JustEngagedWith(Unit* who) override
         {
-            BossAI::EnterCombat(who);
+            BossAI::JustEngagedWith(who);
             me->CastSpell(me, SPELL_NEGATIVE_ENERGY, true);
             me->CastSpell(me, SPELL_SUMMON_BLOOD_ELVES_PERIODIC, true);
             me->CastSpell(me, SPELL_OPEN_PORTAL_PERIODIC, true);
@@ -186,7 +187,7 @@ public:
             me->DespawnOrUnsummon();
         }
 
-        void EnterCombat(Unit* /*who*/) override
+        void JustEngagedWith(Unit* /*who*/) override
         {
             events.ScheduleEvent(EVENT_SPAWN_BLACK_HOLE, 15000);
             events.ScheduleEvent(EVENT_SPAWN_DARKNESS, 10000);
@@ -299,7 +300,7 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_SINGULARITY_DEATH:
-                    Unit::Kill(me, me);
+                    me->KillSelf();
                     break;
                 case EVENT_START_BLACK_HOLE:
                     me->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_SUMMON_VISUAL2);
@@ -517,3 +518,4 @@ void AddSC_boss_muru()
     new spell_entropius_void_zone_visual();
     new spell_entropius_black_hole_effect();
 }
+

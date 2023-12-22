@@ -15,10 +15,10 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "SpellInfo.h"
 #include "DBCStores.h"
 #include "DBCStructure.h"
 #include "GameGraveyard.h"
+#include "SpellInfo.h"
 #include "SpellMgr.h"
 
 inline void ApplySpellFix(std::initializer_list<uint32> spellIds, void(*fix)(SpellInfo*))
@@ -55,6 +55,18 @@ void SpellMgr::LoadSpellInfoCorrections()
         }, [](SpellInfo* spellInfo)
     {
         spellInfo->AttributesEx3 |= SPELL_ATTR3_ALWAYS_HIT;
+    });
+
+    // Scarlet Raven Priest Image
+    ApplySpellFix({ 48763, 48761 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AuraInterruptFlags &= ~AURA_INTERRUPT_FLAG_SPELL_ATTACK;
+    });
+
+    // Has Brewfest Mug
+    ApplySpellFix({ 42533 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->DurationEntry = sSpellDurationStore.LookupEntry(347); // 15 min
     });
 
     // Elixir of Minor Fortitude
@@ -213,6 +225,15 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->MaxAffectedTargets = 4;
     });
 
+    ApplySpellFix({
+        20424,  // Seal of Command
+        42463,  // Seal of Vengeance
+        53739   // Seal of Corruption
+        }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx3 |= SPELL_ATTR3_IGNORE_CASTER_MODIFIERS;
+    });
+
     // Spitfire Totem
     ApplySpellFix({ 38296 }, [](SpellInfo* spellInfo)
     {
@@ -334,12 +355,6 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->Attributes &= ~SPELL_ATTR0_NOT_SHAPESHIFTED;   // with this spell atrribute aura can be stacked several times
     });
 
-    // Nether Portal - Perseverence
-    ApplySpellFix({ 30421 }, [](SpellInfo* spellInfo)
-    {
-        spellInfo->Effects[EFFECT_2].BasePoints += 30000;
-    });
-
     // Natural shapeshifter
     ApplySpellFix({ 16834, 16835 }, [](SpellInfo* spellInfo)
     {
@@ -407,7 +422,7 @@ void SpellMgr::LoadSpellInfoCorrections()
     // Marked for Death
     ApplySpellFix({ 53241, 53243, 53244, 53245, 53246 }, [](SpellInfo* spellInfo)
     {
-        spellInfo->Effects[EFFECT_0].SpellClassMask = flag96(423937, 276955137, 2049);
+        spellInfo->Effects[EFFECT_0].SpellClassMask = flag96(399361, 276955137, 1);
     });
 
     ApplySpellFix({
@@ -589,6 +604,14 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->Effects[EFFECT_1].ApplyAuraName = SPELL_AURA_DUMMY; // just a marker
     });
 
+    ApplySpellFix({
+        6940, // Hand of Sacrifice
+        64205 // Divine Sacrifice
+        }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx7 |= SPELL_ATTR7_DONT_CAUSE_SPELL_PUSHBACK;
+    });
+
     // Seal of Command trigger
     ApplySpellFix({ 20424 }, [](SpellInfo* spellInfo)
     {
@@ -659,7 +682,8 @@ void SpellMgr::LoadSpellInfoCorrections()
     });
 
     // Kill Command
-    ApplySpellFix({ 34027 }, [](SpellInfo* spellInfo)
+    // Kill Command, Overpower
+    ApplySpellFix({ 34027, 37529 }, [](SpellInfo* spellInfo)
     {
         spellInfo->ProcCharges = 0;
     });
@@ -719,8 +743,7 @@ void SpellMgr::LoadSpellInfoCorrections()
 
     ApplySpellFix({
         5171,   // Slice and Dice
-        6774,   // Slice and Dice
-        1725    // Distract
+        6774    // Slice and Dice
         }, [](SpellInfo* spellInfo)
     {
         spellInfo->AttributesEx3 |= SPELL_ATTR3_SUPRESS_TARGET_PROCS;
@@ -1009,14 +1032,6 @@ void SpellMgr::LoadSpellInfoCorrections()
     {
         // summoned doomguard duration fix
         spellInfo->DurationEntry = sSpellDurationStore.LookupEntry(6);
-    });
-
-    // Glyph of Voidwalker
-    ApplySpellFix({ 56247 }, [](SpellInfo* spellInfo)
-    {
-        spellInfo->Effects[EFFECT_0].ApplyAuraName = SPELL_AURA_ADD_FLAT_MODIFIER;
-        spellInfo->Effects[EFFECT_0].MiscValue = SPELLMOD_EFFECT1;
-        spellInfo->Effects[EFFECT_0].SpellClassMask = flag96(0x8000000, 0, 0);
     });
 
     // Everlasting Affliction
@@ -1513,8 +1528,8 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->ChannelInterruptFlags |= AURA_INTERRUPT_FLAG_MOVE;
     });
 
-    // Debris
-    ApplySpellFix({ 36449 }, [](SpellInfo* spellInfo)
+    // Debris - Debris Visual
+    ApplySpellFix({ 36449, 30632 }, [](SpellInfo* spellInfo)
     {
         spellInfo->Attributes |= SPELL_ATTR0_AURA_IS_DEBUFF;
     });
@@ -1523,12 +1538,6 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 30531 }, [](SpellInfo* spellInfo)
     {
         spellInfo->AttributesEx3 |= SPELL_ATTR3_DOT_STACKING_RULE;
-    });
-
-    // Debris Visual
-    ApplySpellFix({ 30632 }, [](SpellInfo* spellInfo)
-    {
-        spellInfo->Effects[EFFECT_0].TargetB = SpellImplicitTargetInfo(TARGET_DEST_DYNOBJ_ALLY);
     });
 
     // Activate Sunblade Protecto
@@ -3911,12 +3920,6 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->ExcludeCasterAuraSpell = 42299;
     });
 
-    // Catch the Wild Wolpertinger!
-    ApplySpellFix({ 41621 }, [](SpellInfo* spellInfo)
-    {
-        spellInfo->Effects[EFFECT_0].Effect = SPELL_EFFECT_DUMMY;
-    });
-
     // Brewfest quests
     ApplySpellFix({ 47134, 51798 }, [](SpellInfo* spellInfo)
     {
@@ -4380,7 +4383,8 @@ void SpellMgr::LoadSpellInfoCorrections()
     });
 
     // Judgement (Paladin T2 8P Bonus)
-    ApplySpellFix({ 23591 }, [](SpellInfo* spellInfo)
+    // Battlegear of Eternal Justice
+    ApplySpellFix({ 23591, 26135 }, [](SpellInfo* spellInfo)
     {
         spellInfo->ProcFlags = PROC_FLAG_DONE_SPELL_MELEE_DMG_CLASS;
     });
@@ -4463,6 +4467,181 @@ void SpellMgr::LoadSpellInfoCorrections()
             spellInfo->Effects[index].TargetA = TARGET_UNIT_TARGET_ENEMY;
             spellInfo->Effects[index].TargetB = 0;
         }
+    });
+
+    // Self Visual - Sleep Until Cancelled(DND)
+    ApplySpellFix({ 6606, 14915, 16093 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AuraInterruptFlags &= ~AURA_INTERRUPT_FLAG_NOT_SEATED;
+    });
+
+     // Cleansing Totem, Healing Stream Totem, Mana Tide Totem
+    ApplySpellFix({ 8171,52025, 52041, 52042, 52046, 52047, 52048, 52049, 52050, 58759, 58760, 58761, 39610, 39609 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
+    });
+    // Game In Session
+    ApplySpellFix({ 39331 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].Effect = SPELL_EFFECT_APPLY_AURA;
+        spellInfo->Attributes |= SPELL_ATTR0_NO_AURA_CANCEL;
+        spellInfo->AuraInterruptFlags |= AURA_INTERRUPT_FLAG_CHANGE_MAP;
+    });
+    // Death Ray Warning Visual, Death Ray Damage Visual
+    ApplySpellFix({ 63882, 63886 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx5 |= SPELL_ATTR5_ALLOW_ACTION_DURING_CHANNEL;
+    });
+
+    // Buffeting Winds of Susurrus
+    ApplySpellFix({ 32474 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->DurationEntry = sSpellDurationStore.LookupEntry(556); // 28 seconds
+    });
+
+    // Quest - Healing Salve
+    ApplySpellFix({ 29314 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->CastTimeEntry = sSpellCastTimesStore.LookupEntry(1); // 0s
+    });
+
+    // Seed of Corruption
+    ApplySpellFix({ 27285, 47833, 47834 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx |= SPELL_ATTR1_NO_REFLECTION;
+    });
+
+    // Turn the Tables
+    ApplySpellFix({ 51627, 51628, 51629 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx3 |= SPELL_ATTR3_DOT_STACKING_RULE;
+    });
+
+     // Silence
+    ApplySpellFix({ 18278 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx4 |= SPELL_ATTR4_NOT_IN_ARENA_OR_RATED_BATTLEGROUND;
+    });
+
+    // Absorb Life
+    ApplySpellFix({ 34239 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].ValueMultiplier = 1;
+    });
+
+    // Summon a Warp Rift in Void Ridge
+    ApplySpellFix({ 35036 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->CastTimeEntry = sSpellCastTimesStore.LookupEntry(1); // 0s
+    });
+
+    // Hit Rating (Dungeon T3 - 2P Bonus - Wastewalker, Doomplate)
+    ApplySpellFix({ 37608, 37610 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->DurationEntry = sSpellDurationStore.LookupEntry(0);
+        spellInfo->Effects[EFFECT_0].MiscValue = 224;
+    });
+
+    // Target Fissures
+    ApplySpellFix({ 30745 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->MaxAffectedTargets = 1;
+    });
+
+    // Acid Spit
+    ApplySpellFix({ 34290 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->MaxAffectedTargets = 1;
+    });
+
+    // Mulgore Hatchling (periodic)
+    ApplySpellFix({ 62586 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].TriggerSpell = 62585; // Mulgore Hatchling (fear)
+    });
+
+    // Poultryized!
+    ApplySpellFix({ 30504 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AuraInterruptFlags |= AURA_INTERRUPT_FLAG_TAKE_DAMAGE;
+    });
+
+    // Torment of the Worgen
+    ApplySpellFix({ 30567 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->ProcChance = 3;
+    });
+
+    // Summon Water Elementals
+    ApplySpellFix({ 29962, 37051, 37052, 37053 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->RangeEntry = sSpellRangeStore.LookupEntry(13); // 50000yd
+    });
+
+    // Instill Lord Valthalak's Spirit DND
+    ApplySpellFix({ 27360 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->ChannelInterruptFlags |= AURA_INTERRUPT_FLAG_MOVE;
+    });
+
+    // Holiday - Midsummer, Ribbon Pole Periodic Visual
+    ApplySpellFix({ 45406 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AuraInterruptFlags |= ( AURA_INTERRUPT_FLAG_MOUNT | AURA_INTERRUPT_FLAG_CAST );
+    });
+
+    // Improved Mind Flay and Smite
+    ApplySpellFix({ 37571 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].SpellClassMask[0] = 8388736;
+    });
+
+    // Improved Corruption and Immolate (Updated)
+    ApplySpellFix({ 61992 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_1].Effect = SPELL_EFFECT_APPLY_AURA;
+        spellInfo->Effects[EFFECT_1].ApplyAuraName = SPELL_AURA_ADD_PCT_MODIFIER;
+        spellInfo->Effects[EFFECT_1].TargetA = SpellImplicitTargetInfo(TARGET_UNIT_CASTER);
+        spellInfo->Effects[EFFECT_1].BasePoints = 4;
+        spellInfo->Effects[EFFECT_1].DieSides = 1;
+        spellInfo->Effects[EFFECT_1].MiscValue = 22;
+        spellInfo->Effects[EFFECT_1].SpellClassMask[0] = 6;
+    });
+
+    // 46747 Fling torch
+    ApplySpellFix({ 46747 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].TargetA = SpellImplicitTargetInfo(TARGET_DEST_CASTER);
+    });
+
+    // Chains of Naberius
+    ApplySpellFix({ 36146 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->MaxAffectedTargets = 1;
+    });
+
+    // Force of Neltharaku
+    ApplySpellFix({ 38762 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].TargetA = SpellImplicitTargetInfo(TARGET_UNIT_TARGET_ANY);
+    });
+
+    // Spotlight
+    ApplySpellFix({ 29683, 32214 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx5 |= SPELL_ATTR5_DO_NOT_DISPLAY_DURATION;
+    });
+
+    // Haunted
+    ApplySpellFix({ 53768 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Attributes |= SPELL_ATTR0_NO_AURA_CANCEL;
+    });
+
+    // Tidal Wave
+    ApplySpellFix({ 37730 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
     });
 
     for (uint32 i = 0; i < GetSpellInfoStoreSize(); ++i)

@@ -80,7 +80,7 @@ namespace lfg
 
         sLFGMgr->InitializeLockedDungeons(player, group);
         sLFGMgr->SetTeam(player->GetGUID(), player->GetTeamId());
-        // TODO - Restore LfgPlayerData and send proper status to player if it was in a group
+        /// @todo - Restore LfgPlayerData and send proper status to player if it was in a group
     }
 
     void LFGPlayerScript::OnBindToInstance(Player* player, Difficulty difficulty, uint32 mapId, bool /*permanent*/)
@@ -297,4 +297,9 @@ namespace lfg
         }
     }
 
+    void AddSC_LFGScripts()
+    {
+        new LFGPlayerScript();
+        new LFGGroupScript();
+    }
 } // namespace lfg

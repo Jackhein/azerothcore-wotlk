@@ -15,10 +15,11 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "CreatureScript.h"
 #include "Player.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
+#include "SpellScriptLoader.h"
 #include "Vehicle.h"
 
 enum Texts
@@ -99,7 +100,7 @@ public:
         npc_tiger_matriarch_creditAI(Creature* creature) : ScriptedAI(creature)
         {
             SetCombatMovement(false);
-            events.ScheduleEvent(EVENT_CHECK_SUMMON_AURA, 2000);
+            events.ScheduleEvent(EVENT_CHECK_SUMMON_AURA, 2s);
         }
 
         void UpdateAI(uint32 diff) override
@@ -129,7 +130,7 @@ public:
                     }
                 }
 
-                events.ScheduleEvent(EVENT_CHECK_SUMMON_AURA, 5000);
+                events.ScheduleEvent(EVENT_CHECK_SUMMON_AURA, 5s);
             }
         }
 
@@ -154,23 +155,26 @@ public:
         {
         }
 
-        void EnterCombat(Unit* /*target*/) override
+        void JustEngagedWith(Unit* /*target*/) override
         {
             _events.Reset();
-            _events.ScheduleEvent(EVENT_POUNCE, 100);
-            _events.ScheduleEvent(EVENT_NOSUMMON, 50000);
+            _events.ScheduleEvent(EVENT_POUNCE, 100ms);
+            _events.ScheduleEvent(EVENT_NOSUMMON, 50s);
         }
 
-        void IsSummonedBy(Unit* summoner) override
+        void IsSummonedBy(WorldObject* summoner) override
         {
-            if (summoner->GetTypeId() != TYPEID_PLAYER || !summoner->GetVehicle())
-                return;
-
-            _tigerGuid = summoner->GetVehicle()->GetBase()->GetGUID();
-            if (Unit* tiger = ObjectAccessor::GetUnit(*me, _tigerGuid))
+            if (Player* player = summoner->ToPlayer())
             {
-                me->AddThreat(tiger, 500000.0f);
-                DoCast(me, SPELL_FURIOUS_BITE);
+                if (Vehicle* vehicle = player->GetVehicle())
+                {
+                    _tigerGuid = vehicle->GetBase()->GetGUID();
+                    if (Unit* tiger = ObjectAccessor::GetUnit(*me, _tigerGuid))
+                    {
+                        me->AddThreat(tiger, 500000.0f);
+                        DoCast(me, SPELL_FURIOUS_BITE);
+                    }
+                }
             }
         }
 
@@ -229,7 +233,7 @@ public:
                 {
                     case EVENT_POUNCE:
                         DoCastVictim(SPELL_POUNCE);
-                        _events.ScheduleEvent(EVENT_POUNCE, 30000);
+                        _events.ScheduleEvent(EVENT_POUNCE, 30s);
                         break;
                     case EVENT_NOSUMMON: // Reapply SPELL_NO_SUMMON_AURA
                         if (Unit* tiger = ObjectAccessor::GetUnit(*me, _tigerGuid))
@@ -238,7 +242,7 @@ public:
                                 if (Unit* vehSummoner = tiger->ToTempSummon()->GetSummonerUnit())
                                     me->AddAura(SPELL_NO_SUMMON_AURA, vehSummoner);
                         }
-                        _events.ScheduleEvent(EVENT_NOSUMMON, 50000);
+                        _events.ScheduleEvent(EVENT_NOSUMMON, 50s);
                         break;
                     default:
                         break;
@@ -507,3 +511,4 @@ void AddSC_durotar()
     new spell_voljin_war_drums();
     new spell_voodoo();
 }
+
