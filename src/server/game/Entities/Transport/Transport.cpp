@@ -138,7 +138,7 @@ void MotionTransport::BuildUpdate(UpdateDataMapType& data_map, UpdatePlayerSet&)
 
 void MotionTransport::Update(uint32 diff)
 {
-    uint32 const positionUpdateDelay = 1;
+     uint32 const positionUpdateDelay = 1;
 
     if (AI())
         AI()->UpdateAI(diff);
@@ -161,6 +161,8 @@ void MotionTransport::Update(uint32 diff)
     {
         if (timer >= _currentFrame->ArriveTime)
         {
+            //if (_transportInfo->entry == 401010)
+            //    LOG_DEBUG("entities.transport", "timer >= _currentFrame->ArriveTime");
             if (!_triggeredArrivalEvent)
             {
                 DoEventIfAny(*_currentFrame, false);
@@ -169,6 +171,8 @@ void MotionTransport::Update(uint32 diff)
 
             if (timer < _currentFrame->DepartureTime)
             {
+                //if (_transportInfo->entry == 401010)
+                //    LOG_DEBUG("entities.transport", "timer < _currentFrame->DepartureTime");
                 SetMoving(false);
                 if (_pendingStop && GetGoState() != GO_STATE_READY)
                 {
@@ -200,8 +204,6 @@ void MotionTransport::Update(uint32 diff)
         MoveToNextWaypoint();
 
         sScriptMgr->OnRelocate(this, _currentFrame->Node->index, _currentFrame->Node->mapid, _currentFrame->Node->x, _currentFrame->Node->y, _currentFrame->Node->z);
-
-        //LOG_DEBUG("entities.transport", "Transport {} ({}) moved to node {} {} {} {} {}", GetEntry(), GetName(), _currentFrame->Node->index, _currentFrame->Node->mapid, _currentFrame->Node->x, _currentFrame->Node->y, _currentFrame->Node->z);
 
         // Departure event
         if (_currentFrame->IsTeleportFrame())
@@ -248,6 +250,8 @@ void MotionTransport::DelayedUpdate(uint32  /*diff*/)
 
 void MotionTransport::UpdatePosition(float x, float y, float z, float o)
 {
+    //if (_transportInfo->entry == 401010)
+    //    LOG_DEBUG("entities.transport", "UpdatePosition -> {}, x:{} y:{} z:{} m:{} o:{}.", _transportInfo->entry, x, y, z, GetGOInfo()->moTransport.mapID, o);
     if (!GetMap()->IsGridLoaded(x, y)) // pussywizard: should not happen, but just in case
         GetMap()->LoadGrid(x, y);
 
@@ -268,7 +272,10 @@ void MotionTransport::AddPassenger(WorldObject* passenger, bool withAll)
     if (_passengers.insert(passenger).second)
     {
         if (Player* plr = passenger->ToPlayer())
+        {
             sScriptMgr->OnAddPassenger(ToTransport(), plr);
+            LOG_DEBUG("entities.player", "is in motion transport");
+        }
 
         if (withAll)
         {
@@ -968,7 +975,10 @@ void StaticTransport::AddPassenger(WorldObject* passenger, bool withAll)
     if (_passengers.insert(passenger).second)
     {
         if (Player* plr = passenger->ToPlayer())
+        {
             sScriptMgr->OnAddPassenger(ToTransport(), plr);
+            LOG_DEBUG("entities.player", "is in static transport");
+        }
 
         if (withAll)
         {

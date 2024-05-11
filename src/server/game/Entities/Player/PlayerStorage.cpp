@@ -5225,6 +5225,7 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
             {
                 Relocate(x, y, z, o);
                 mapId = m_transport->GetMapId();
+                LOG_DEBUG("entities.player", "TEST: PlayerStorage -> AddPassenger");
                 m_transport->AddPassenger(this);
                 AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
             }

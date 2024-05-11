@@ -420,6 +420,7 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
 
     if (movementInfo.HasMovementFlag(MOVEMENTFLAG_ONTRANSPORT))
     {
+        LOG_DEBUG("entities.player", "TEST: MovementHandler -> AddPassenger #-1, movementInfo: {}", movementInfo.guid.ToString());
         // We were teleported, skip packets that were broadcast before teleport
         if (movementInfo.pos.GetExactDist2d(mover) > SIZE_OF_GRIDS)
         {
@@ -447,10 +448,12 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
         // if we boarded a transport, add us to it
         if (plrMover)
         {
-            if (!plrMover->GetTransport())
+            if (!(plrMover->GetTransport()))
             {
+                LOG_DEBUG("entities.player", "TEST: MovementHandler -> AddPassenger #0");
                 if (Transport* transport = plrMover->GetMap()->GetTransport(movementInfo.transport.guid))
                 {
+                    LOG_DEBUG("entities.player", "TEST: MovementHandler -> AddPassenger #1 Map: {}, Transport: {}", plrMover->GetMap()->GetId(), movementInfo.transport.guid.GetHigh());
                     plrMover->m_transport = transport;
                     transport->AddPassenger(plrMover);
                 }
@@ -461,6 +464,7 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
                 plrMover->m_transport->RemovePassenger(plrMover);
                 if (Transport* transport = plrMover->GetMap()->GetTransport(movementInfo.transport.guid))
                 {
+                    LOG_DEBUG("entities.player", "TEST: MovementHandler -> AddPassenger #2");
                     foundNewTransport = true;
                     plrMover->m_transport = transport;
                     transport->AddPassenger(plrMover);

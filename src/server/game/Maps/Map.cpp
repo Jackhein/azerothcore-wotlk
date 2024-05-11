@@ -586,11 +586,17 @@ bool Map::AddToMap(T* obj, bool checkTransport)
     //obj->SetMap(this);
     obj->AddToWorld();
 
-    if (checkTransport)
-        if (!(obj->GetTypeId() == TYPEID_GAMEOBJECT && obj->ToGameObject()->IsTransport())) // dont add transport to transport ;d
-            if (Transport* transport = GetTransportForPos(obj->GetPhaseMask(), obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), obj))
+    if (checkTransport) {
+        if (!(obj->GetTypeId() == TYPEID_GAMEOBJECT &&
+              obj->ToGameObject()->IsTransport())) // dont add transport to transport ;d
+        {
+            if (Transport *transport = GetTransportForPos(obj->GetPhaseMask(), obj->GetPositionX(), obj->GetPositionY(),
+                                                          obj->GetPositionZ(), obj)) {
+                LOG_DEBUG("entities.player", "JUST FOR TEST");
                 transport->AddPassenger(obj, true);
-
+            }
+        }
+    }
     InitializeObject(obj);
 
     if (obj->isActiveObject())

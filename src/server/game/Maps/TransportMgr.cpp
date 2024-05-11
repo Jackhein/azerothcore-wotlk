@@ -377,6 +377,7 @@ MotionTransport* TransportMgr::CreateTransport(uint32 entry, ObjectGuid::LowType
     }
 
     // create transport...
+    LOG_DEBUG("entities.transport", "MotionTransport -> {}.", entry);
     MotionTransport* trans = new MotionTransport();
 
     // ...at first waypoint
@@ -390,14 +391,17 @@ MotionTransport* TransportMgr::CreateTransport(uint32 entry, ObjectGuid::LowType
     // initialize the gameobject base
     ObjectGuid::LowType guidLow = guid ? guid : sObjectMgr->GetGenerator<HighGuid::Mo_Transport>().Generate();
 
+    LOG_DEBUG("entities.transport", "CreateMoTrans -> {}.", entry);
     if (!trans->CreateMoTrans(guidLow, entry, mapId, x, y, z, o, 255))
     {
         delete trans;
         return nullptr;
     }
 
+    LOG_DEBUG("entities.transport", "LookupEntry -> {} of mapId {}.", entry, mapId);
     if (MapEntry const* mapEntry = sMapStore.LookupEntry(mapId))
     {
+        LOG_DEBUG("entities.transport", "inInstance? -> {}.", entry);
         if (mapEntry->Instanceable() != tInfo->inInstance)
         {
             LOG_ERROR("entities.transport", "Transport {} (name: {}) attempted creation in instance map (id: {}) but it is not an instanced transport!", entry, trans->GetName(), mapId);
@@ -408,13 +412,18 @@ MotionTransport* TransportMgr::CreateTransport(uint32 entry, ObjectGuid::LowType
 
     // use preset map for instances (need to know which instance)
     trans->SetMap(map ? map : sMapMgr->CreateMap(mapId, nullptr));
+    LOG_DEBUG("entities.transport", "IsDungeon -> {}.", entry);
     if (map && map->IsDungeon())
+    {
+        LOG_DEBUG("entities.transport", "It is.");
         trans->m_zoneScript = map->ToInstanceMap()->GetInstanceScript();
+    }
 
     // xinef: transports are active so passengers can be relocated (grids must be loaded)
     trans->setActive(true);
     HashMapHolder<MotionTransport>::Insert(trans);
     trans->GetMap()->AddToMap<MotionTransport>(trans);
+    LOG_DEBUG("entities.transport", "TransportCreated -> {}.", entry);
     return trans;
 }
 
@@ -440,6 +449,7 @@ void TransportMgr::SpawnContinentTransports()
 
                 if (TransportTemplate const* tInfo = GetTransportTemplate(entry))
                     if (!tInfo->inInstance)
+                        LOG_DEBUG("entities.transport", "Transport {} attempt creation.", entry);
                         if (CreateTransport(entry, guid))
                             ++count;
 

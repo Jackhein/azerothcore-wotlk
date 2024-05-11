@@ -857,6 +857,7 @@ void Creature::Update(uint32 diff)
                 Transport* newTransport = GetMap()->GetTransportForPos(GetPhaseMask(), GetPositionX(), GetPositionY(), GetPositionZ(), this);
                 if (newTransport != GetTransport())
                 {
+                    LOG_DEBUG("entities.player", "JUST FOR TEST");
                     if (GetTransport())
                         GetTransport()->RemovePassenger(this, true);
                     if (newTransport)
