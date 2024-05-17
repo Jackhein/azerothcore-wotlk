@@ -25,6 +25,12 @@ COPY . .
 
 # Get modules
 WORKDIR /wotlk/modules
+RUN git clone https://github.com/Jackhein/mod-check-modules-conflicts
+WORKDIR /wotlk/modules/mod-check-modules-conflicts
+RUN ./apply_sql_copy.sh -y
+RUN ./apply_conf_copy.sh -y -p /usr/local/etc/
+RUN ./apply_git_patch.sh
+RUN rm -rf /wotlk/modules/mod-check-modules-conflicts
 
 #Build authserver
 WORKDIR /wotlk/build
