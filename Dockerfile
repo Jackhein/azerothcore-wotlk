@@ -30,16 +30,16 @@ COPY . .
 
 # Get modules
 WORKDIR /wotlk/modules
-RUN git clone https://github.com/Jackhein/mod-event-weekend-bonus
 RUN git clone https://github.com/Jackhein/mod-event-love-is-in-the-air-60
 RUN git clone https://github.com/Jackhein/mod-event-hallow-s-end-60
+RUN git clone https://github.com/Jackhein/mod-event-lunar-festival-60
+RUN git clone https://github.com/Jackhein/mod-murlocvillage
 RUN git clone https://github.com/azerothcore/mod-transmog
-RUN git clone https://github.com/Jackhein/mod-talent-points-quests
 RUN git clone https://github.com/Jackhein/mod-check-modules-conflicts
 WORKDIR /wotlk/modules/mod-check-modules-conflicts
 RUN ./apply_sql_copy.sh -y
 RUN ./apply_conf_copy.sh -y -p /usr/local/etc/
-RUN ./apply_git_patch.sh
+RUN ./apply_git_patch.sh -y
 RUN rm -rf /wotlk/modules/mod-check-modules-conflicts
 
 # Build worldserver
