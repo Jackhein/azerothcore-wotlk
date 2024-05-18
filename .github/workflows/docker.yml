@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          tags: jackhein/murlocvillage_worldserver:latest
+          tags: jackhein/murlocvillage_worldserver:echo "::set-env name=NOW::$(date +'%Y%m%d.%H%M%S')"
           push: true
       -
         name: Image digest
