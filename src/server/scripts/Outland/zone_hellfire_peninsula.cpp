@@ -24,40 +24,39 @@
 #include "ScriptedGossip.h"
 #include "SpellScript.h"
 #include "SpellScriptLoader.h"
+#include "WorldState.h"
 
-// Ours
-
-class spell_q10935_the_exorcism_of_colonel_jules : public SpellScriptLoader
+enum q10935Exorcism
 {
-public:
-    spell_q10935_the_exorcism_of_colonel_jules() : SpellScriptLoader("spell_q10935_the_exorcism_of_colonel_jules") { }
+    SPELL_HOLY_FIRE             = 39323,
+    SPELL_HEAL_BARADA           = 39322
+};
 
-    class spell_q10935_the_exorcism_of_colonel_jules_SpellScript : public SpellScript
+class spell_q10935_the_exorcism_of_colonel_jules : public SpellScript
+{
+    PrepareSpellScript(spell_q10935_the_exorcism_of_colonel_jules);
+
+    bool Validate(SpellInfo const* /*spellInfo*/) override
     {
-        PrepareSpellScript(spell_q10935_the_exorcism_of_colonel_jules_SpellScript);
+        return ValidateSpellInfo({ SPELL_HOLY_FIRE, SPELL_HEAL_BARADA });
+    }
 
-        void HandleDummy(SpellEffIndex effIndex)
-        {
-            PreventHitDefaultEffect(effIndex);
-            Creature* target = GetHitCreature();
-            if (!target)
-                return;
-
-            if (GetCaster()->IsHostileTo(target))
-                GetCaster()->CastSpell(target, 39323 /*SPELL_HOLY_FIRE*/, true);
-            else
-                GetCaster()->CastSpell(target, 39322 /*SPELL_HEAL_BARADA*/, true);
-        }
-
-        void Register() override
-        {
-            OnEffectHitTarget += SpellEffectFn(spell_q10935_the_exorcism_of_colonel_jules_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
-        }
-    };
-
-    SpellScript* GetSpellScript() const override
+    void HandleDummy(SpellEffIndex effIndex)
     {
-        return new spell_q10935_the_exorcism_of_colonel_jules_SpellScript();
+        PreventHitDefaultEffect(effIndex);
+        Creature* target = GetHitCreature();
+        if (!target)
+            return;
+
+        if (GetCaster()->IsHostileTo(target))
+            GetCaster()->CastSpell(target, SPELL_HOLY_FIRE, true);
+        else
+            GetCaster()->CastSpell(target, SPELL_HEAL_BARADA, true);
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_q10935_the_exorcism_of_colonel_jules::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
     }
 };
 
@@ -172,7 +171,7 @@ public:
     {
         npc_ancestral_wolfAI(Creature* creature) : npc_escortAI(creature)
         {
-            if (creature->GetOwner() && creature->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+            if (creature->GetOwner() && creature->GetOwner()->IsPlayer())
                 Start(false, false, creature->GetOwner()->GetGUID());
             creature->SetSpeed(MOVE_WALK, 1.5f);
             DoCast(SPELL_GUIDED_BY_THE_SPIRITS);
@@ -604,10 +603,30 @@ public:
     }
 };
 
+struct go_magtheridons_head : public GameObjectAI
+{
+    go_magtheridons_head(GameObject* gameObject) : GameObjectAI(gameObject) { }
+
+    void InitializeAI() override
+    {
+        me->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE); // spawn head on spike
+        me->SetGameObjectFlag(GO_FLAG_NOT_SELECTABLE);
+        sWorldState->HandleExternalEvent(WORLD_STATE_CUSTOM_EVENT_ON_MAGTHERIDON_HEAD_SPAWN, me->GetPositionX() > 0.f ? TEAM_HORDE : TEAM_ALLIANCE);
+    }
+
+    void OnStateChanged(uint32 state, Unit* /*unit*/) override
+    {
+        if (state == GO_JUST_DEACTIVATED)
+        {
+            sWorldState->HandleExternalEvent(WORLD_STATE_CUSTOM_EVENT_ON_MAGTHERIDON_HEAD_DESPAWN, me->GetPositionX() > 0.f ? TEAM_HORDE : TEAM_ALLIANCE);
+        }
+    }
+};
+
 void AddSC_hellfire_peninsula()
 {
     // Ours
-    new spell_q10935_the_exorcism_of_colonel_jules();
+    RegisterSpellScript(spell_q10935_the_exorcism_of_colonel_jules);
 
     // Theirs
     new npc_aeranas();
@@ -617,4 +636,5 @@ void AddSC_hellfire_peninsula()
     new go_beacon();
 
     RegisterCreatureAI(npc_magister_aledis);
+    RegisterGameObjectAI(go_magtheridons_head);
 }

@@ -20,14 +20,12 @@
 
 #include "DeadlineTimer.h"
 #include "Define.h"
-#include "Socket.h"
 #include "Errors.h"
 #include "IoContext.h"
 #include "Log.h"
-#include "Timer.h"
+#include "Socket.h"
 #include <atomic>
 #include <boost/asio/ip/tcp.hpp>
-#include <chrono>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -134,7 +132,7 @@ protected:
 
     void HandleNewSocketsProxyReadingOnConnect()
     {
-        size_t index = 0;
+        std::size_t index = 0;
         std::vector<int> newSocketsToRemoveIndexes;
         for (auto sock_iter = _newSockets.begin(); sock_iter != _newSockets.end(); ++sock_iter, ++index)
         {
@@ -173,8 +171,8 @@ protected:
             }
         }
 
-        for (int removeIndex : newSocketsToRemoveIndexes)
-            _newSockets.erase(_newSockets.begin() + removeIndex);
+        for (auto it = newSocketsToRemoveIndexes.rbegin(); it != newSocketsToRemoveIndexes.rend(); ++it)
+            _newSockets.erase(_newSockets.begin() + *it);
     }
 
     void Run()
