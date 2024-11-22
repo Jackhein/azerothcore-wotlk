@@ -35,6 +35,7 @@ COPY . .
 
 # Get modules
 WORKDIR /wotlk/modules
+RUN rm -rf mod-*
 RUN git clone https://github.com/Jackhein/mod-event-love-is-in-the-air-60
 RUN git clone https://github.com/Jackhein/mod-event-hallow-s-end-60
 RUN git clone https://github.com/Jackhein/mod-event-lunar-festival-60
@@ -48,7 +49,7 @@ RUN rm -rf /wotlk/modules/mod-check-modules-conflicts
 
 # Build worldserver
 WORKDIR /wotlk/build
-RUN cmake ../ -DCMAKE_INSTALL_PREFIX=/usr/local/ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DWITH_WARNINGS=1 -DSCRIPTS=static -DMODULES=static -DTOOLS_BUILD=none -DAPPS_BUILD=world-only
+RUN cmake ../ -DCMAKE_INSTALL_PREFIX=/usr/local/ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DWITH_WARNINGS=1 -DSCRIPTS=static -DMODULES=static -DTOOLS_BUILD=none -DAPPS_BUILD=all
 
 # Compile worldserver
 RUN make install -j $(nproc --all)
