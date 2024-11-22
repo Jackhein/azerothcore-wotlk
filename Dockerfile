@@ -31,7 +31,7 @@ COPY . .
 
 # Get modules
 WORKDIR /wotlk/modules
-RUN rm -rf *
+RUN rm -rf mod-*
 RUN git clone https://github.com/Jackhein/mod-check-modules-conflicts
 WORKDIR /wotlk/modules/mod-check-modules-conflicts
 RUN bash apply_sql_copy.sh -y
@@ -40,7 +40,7 @@ RUN rm -rf /wotlk/modules/mod-check-modules-conflicts
 
 #Build authserver
 WORKDIR /wotlk/build
-RUN cmake ../ -DCMAKE_INSTALL_PREFIX=/usr/local/ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DWITH_WARNINGS=1 -DSCRIPTS=static -DMODULES=static -DTOOLS_BUILD=none -DAPPS_BUILD=all
+RUN cmake ../ -DCMAKE_INSTALL_PREFIX=/usr/local/ -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DWITH_WARNINGS=1 -DSCRIPTS=static -DMODULES=static -DTOOLS_BUILD=none -DAPPS_BUILD=auth-only
 #Warning; Should have at least 2 proc!
 RUN make install -j $(nproc --all)
 RUN make clean
