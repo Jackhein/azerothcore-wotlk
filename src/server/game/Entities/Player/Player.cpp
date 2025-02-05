@@ -7688,6 +7688,10 @@ bool Player::CheckAmmoCompatibility(ItemTemplate const* ammo_proto) const
             if (ammo_proto->SubClass != ITEM_SUBCLASS_BULLET)
                 return false;
             break;
+        case ITEM_SUBCLASS_WEAPON_WAND:
+            if (ammo_proto->SubClass != ITEM_SUBCLASS_WAND)
+                return false;
+            break;
         default:
             return false;
     }

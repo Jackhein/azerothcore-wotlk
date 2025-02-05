@@ -202,7 +202,7 @@ struct boss_viscidus : public BossAI
         }
 
         SpellSchoolMask spellSchoolMask = spellInfo->GetSchoolMask();
-        if (spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON && spellInfo->EquippedItemSubClassMask & (1 << ITEM_SUBCLASS_WEAPON_WAND))
+        if (spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON && spellInfo->EquippedItemSubClassMask & (1 << ITEM_SUBCLASS_WEAPON_WAND))// TODO: mod_wand_ammo bonus damage or type of damage ?
         {
             if (Item* pItem = caster->ToPlayer()->GetWeaponForAttack(RANGED_ATTACK))
             {

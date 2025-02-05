@@ -2310,7 +2310,7 @@ void Spell::prepareDataForTriggerSystem(AuraEffect const* /*triggeredByAura*/)
             break;
         case SPELL_DAMAGE_CLASS_RANGED:
             // Auto attack
-            if (m_spellInfo->HasAttribute(SPELL_ATTR2_AUTO_REPEAT))
+            if (m_spellInfo->HasAttribute(SPELL_ATTR2_AUTO_REPEAT))// TODO: mod_ranged_auto_attack
             {
                 m_procAttacker = PROC_FLAG_DONE_RANGED_AUTO_ATTACK;
                 m_procVictim   = PROC_FLAG_TAKEN_RANGED_AUTO_ATTACK;
@@ -5383,8 +5383,7 @@ void Spell::TakeAmmo()
     {
         Item* pItem = m_caster->ToPlayer()->GetWeaponForAttack(RANGED_ATTACK);
 
-        // wands don't have ammo
-        if (!pItem  || pItem->IsBroken() || pItem->GetTemplate()->SubClass == ITEM_SUBCLASS_WEAPON_WAND)
+        if (!pItem  || pItem->IsBroken())
             return;
 
         if (pItem->GetTemplate()->InventoryType == INVTYPE_THROWN)
@@ -7638,6 +7637,7 @@ SpellCastResult Spell::CheckItems()
                         case ITEM_SUBCLASS_WEAPON_GUN:
                         case ITEM_SUBCLASS_WEAPON_BOW:
                         case ITEM_SUBCLASS_WEAPON_CROSSBOW:
+                        case ITEM_SUBCLASS_WEAPON_WAND:
                             {
                                 uint32 ammo = m_caster->ToPlayer()->GetUInt32Value(PLAYER_AMMO_ID);
                                 if (!ammo)
@@ -7668,6 +7668,10 @@ SpellCastResult Spell::CheckItems()
                                         if (ammoProto->SubClass != ITEM_SUBCLASS_BULLET)
                                             return SPELL_FAILED_NO_AMMO;
                                         break;
+                                    case ITEM_SUBCLASS_WEAPON_WAND:
+                                        if (ammoProto->SubClass != ITEM_SUBCLASS_WAND)
+                                            return SPELL_FAILED_NO_AMMO;
+                                        break;
                                     default:
                                         return SPELL_FAILED_NO_AMMO;
                                 }
@@ -7678,8 +7682,6 @@ SpellCastResult Spell::CheckItems()
                                     return SPELL_FAILED_NO_AMMO;
                                 }
                             };
-                            break;
-                        case ITEM_SUBCLASS_WEAPON_WAND:
                             break;
                         default:
                             break;
