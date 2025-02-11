@@ -17,15 +17,15 @@
 
 #include "OutdoorPvPNA.h"
 #include "CreatureScript.h"
-#include "GridNotifiers.h"
-#include "ScriptedCreature.h"
 #include "GameGraveyard.h"
+#include "GridNotifiers.h"
 #include "Language.h"
 #include "MapMgr.h"
 #include "ObjectMgr.h"
 #include "OutdoorPvPMgr.h"
 #include "OutdoorPvPScript.h"
 #include "Player.h"
+#include "ScriptedCreature.h"
 #include "World.h"
 #include "WorldPacket.h"
 
@@ -56,7 +56,7 @@ void OutdoorPvPNA::HandleKill(Player* killer, Unit* killed)
 
             // creature kills must be notified, even if not inside objective / not outdoor pvp active
             // player kills only count if active and inside objective
-            if ((groupGuy->IsOutdoorPvPActive() && groupGuy->GetAreaId() == NA_HALAA_ZONE_ID) || killed->GetTypeId() == TYPEID_UNIT)
+            if ((groupGuy->IsOutdoorPvPActive() && groupGuy->GetAreaId() == NA_HALAA_ZONE_ID) || killed->IsCreature())
             {
                 HandleKillImpl(groupGuy, killed);
             }
@@ -65,7 +65,7 @@ void OutdoorPvPNA::HandleKill(Player* killer, Unit* killed)
     else
     {
         // creature kills must be notified, even if not inside objective / not outdoor pvp active
-        if (killer && ((killer->IsOutdoorPvPActive() && killer->ToPlayer()->GetAreaId() == NA_HALAA_ZONE_ID) || killed->GetTypeId() == TYPEID_UNIT))
+        if (killer && ((killer->IsOutdoorPvPActive() && killer->ToPlayer()->GetAreaId() == NA_HALAA_ZONE_ID) || killed->IsCreature()))
         {
             HandleKillImpl(killer, killed);
         }
@@ -74,7 +74,7 @@ void OutdoorPvPNA::HandleKill(Player* killer, Unit* killed)
 
 void OutdoorPvPNA::HandleKillImpl(Player* player, Unit* killed)
 {
-    if (killed->GetTypeId() == TYPEID_PLAYER && player->GetTeamId() != killed->ToPlayer()->GetTeamId())
+    if (killed->IsPlayer() && player->GetTeamId() != killed->ToPlayer()->GetTeamId())
     {
         player->KilledMonsterCredit(NA_CREDIT_MARKER);
         player->CastSpell(player, player->GetTeamId() == TEAM_ALLIANCE ? NA_KILL_TOKEN_ALLIANCE : NA_KILL_TOKEN_HORDE, true);
@@ -147,7 +147,8 @@ void OPvPCapturePointNA::SpawnNPCsForTeam(HalaaNPCS teamNPC)
     {
         ObjectGuid::LowType spawnId = teamNPC[i];
         const CreatureData* data = sObjectMgr->GetCreatureData(spawnId);
-        if (data) {
+        if (data)
+        {
             UpdateCreatureHalaa(spawnId, _pvp->GetMap(), data->posX, data->posY);
             _creatures[i] = spawnId;
             _creatureTypes[_creatures[i]] = i;
@@ -650,12 +651,14 @@ bool OPvPCapturePointNA::Update(uint32 diff)
     }
     else m_GuardCheckTimer -= diff;
 
-    if (m_capturable) {
+    if (m_capturable)
+    {
         if (m_RespawnTimer < diff)
         {
             // if the guards have been killed, then the challenger has one hour to take over halaa.
             // in case they fail to do it, the guards are respawned, and they have to start again.
-            if (GetControllingFaction() == TEAM_ALLIANCE) {
+            if (GetControllingFaction() == TEAM_ALLIANCE)
+            {
                 _state = OBJECTIVESTATE_ALLIANCE;
                 _value = _maxValue;
             }
@@ -791,7 +794,7 @@ void OPvPCapturePointNA::ChangeState()
             break;
         case OBJECTIVESTATE_ALLIANCE:
             m_HalaaState = HALAA_A;
-            if(m_canRecap)
+            if (m_canRecap)
                 FactionTakeOver(TEAM_ALLIANCE);
             artkit = 2;
             break;
@@ -928,4 +931,3 @@ void AddSC_outdoorpvp_na()
     new OutdoorPvP_nagrand();
     RegisterCreatureAI(outdoorpvp_na_halaa_creatures);
 }
-

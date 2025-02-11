@@ -19,6 +19,7 @@
 #define SCRIPT_OBJECT_PLAYER_SCRIPT_H_
 
 #include "ScriptObject.h"
+#include "SharedDefines.h"
 #include <vector>
 
 // TODO to remove
@@ -28,6 +29,7 @@
 enum PlayerHook
 {
     PLAYERHOOK_ON_PLAYER_JUST_DIED,
+    PLAYERHOOK_ON_CALCULATE_TALENTS_POINTS,
     PLAYERHOOK_ON_PLAYER_RELEASED_GHOST,
     PLAYERHOOK_ON_SEND_INITIAL_PACKETS_BEFORE_ADD_TO_MAP,
     PLAYERHOOK_ON_BATTLEGROUND_DESERTION,
@@ -146,6 +148,9 @@ enum PlayerHook
     PLAYERHOOK_ON_VICTIM_REWARD_AFTER,
     PLAYERHOOK_ON_CUSTOM_SCALING_STAT_VALUE_BEFORE,
     PLAYERHOOK_ON_CUSTOM_SCALING_STAT_VALUE,
+    PLAYERHOOK_ON_APPLY_ITEM_MODS_BEFORE,
+    PLAYERHOOK_ON_APPLY_ENCHANTMENT_ITEM_MODS_BEFORE,
+    PLAYERHOOK_ON_APPLY_WEAPON_DAMAGE,
     PLAYERHOOK_CAN_ARMOR_DAMAGE_MODIFIER,
     PLAYERHOOK_ON_GET_FERAL_AP_BONUS,
     PLAYERHOOK_CAN_APPLY_WEAPON_DEPENDENT_AURA_DAMAGE_MOD,
@@ -199,6 +204,7 @@ enum PlayerHook
     PLAYERHOOK_CAN_SEND_ERROR_ALREADY_LOOTED,
     PLAYERHOOK_ON_AFTER_CREATURE_LOOT,
     PLAYERHOOK_ON_AFTER_CREATURE_LOOT_MONEY,
+    PLAYERHOOK_CAN_RESURRECT,
     PLAYERHOOK_END
 };
 
@@ -210,6 +216,9 @@ protected:
 public:
     // Called when a player dies
     virtual void OnPlayerJustDied(Player* /*player*/) { }
+
+    // Called player talent points are calculated
+    virtual void OnCalculateTalentsPoints(Player const* /*player*/, uint32& /*talentPointsForLevel*/) { }
 
     // Called when clicking the release button
     virtual void OnPlayerReleasedGhost(Player* /*player*/) { }
@@ -398,12 +407,6 @@ public:
     // After player enters queue for Arena
     virtual void OnPlayerJoinArena(Player* /*player*/) { }
 
-    //Called when trying to get a team ID of a slot > 2 (This is for custom teams created by modules)
-    virtual void GetCustomGetArenaTeamId(Player const* /*player*/, uint8 /*slot*/, uint32& /*teamID*/) const { }
-
-    //Called when trying to get players personal rating of an arena slot > 2 (This is for custom teams created by modules)
-    virtual void GetCustomArenaPersonalRating(Player const* /*player*/, uint8 /*slot*/, uint32& /*rating*/) const { }
-
     //Called after the normal slots (0..2) for arena have been evaluated so that custom arena teams could modify it if nececasry
     virtual void OnGetMaxPersonalArenaRatingRequirement(Player const* /*player*/, uint32 /*minSlot*/, uint32& /*maxArenaRating*/) const {}
 
@@ -541,6 +544,12 @@ public:
     virtual void OnCustomScalingStatValueBefore(Player* /*player*/, ItemTemplate const* /*proto*/, uint8 /*slot*/, bool /*apply*/, uint32& /*CustomScalingStatValue*/) { }
 
     virtual void OnCustomScalingStatValue(Player* /*player*/, ItemTemplate const* /*proto*/, uint32& /*statType*/, int32& /*val*/, uint8 /*itemProtoStatNumber*/, uint32 /*ScalingStatValue*/, ScalingStatValuesEntry const* /*ssv*/) { }
+
+    virtual void OnApplyItemModsBefore(Player* /*player*/, uint8 /*slot*/, bool /*apply*/, uint8 /*itemProtoStatNumber*/, uint32 /*statType*/, int32& /*val*/) { }
+
+    virtual void OnApplyEnchantmentItemModsBefore(Player* /*player*/, Item* /*item*/, EnchantmentSlot /*slot*/, bool /*apply*/, uint32 /*enchant_spell_id*/, uint32& /*enchant_amount*/) { }
+
+    virtual void OnApplyWeaponDamage(Player* /*player*/, uint8 /*slot*/, ItemTemplate const* /*proto*/, float& /*minDamage*/, float& /*maxDamage*/, uint8 /*damageIndex*/) { }
 
     [[nodiscard]] virtual bool CanArmorDamageModifier(Player* /*player*/) { return true; }
 
@@ -757,6 +766,15 @@ public:
      * @param player Contains information about the Player
      */
     virtual void OnAfterCreatureLootMoney(Player* /*player*/) { }
+
+    /**
+     * @brief This hook is called, to avoid player resurrect
+     *
+     * @param player Contains information about the Player
+     *
+     * @return true if player is authorized to resurect
+     */
+    virtual bool CanPlayerResurrect(Player* /*player*/) { return true; }
 };
 
 #endif

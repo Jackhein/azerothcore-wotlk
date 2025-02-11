@@ -18,16 +18,14 @@
 #ifndef NetworkThread_h__
 #define NetworkThread_h__
 
-#include "DeadlineTimer.h"
 #include "Define.h"
-#include "Socket.h"
 #include "Errors.h"
 #include "IoContext.h"
 #include "Log.h"
-#include "Timer.h"
-#include <atomic>
+#include "Socket.h"
 #include <boost/asio/ip/tcp.hpp>
-#include <chrono>
+#include <boost/asio/steady_timer.hpp>
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -134,7 +132,7 @@ protected:
 
     void HandleNewSocketsProxyReadingOnConnect()
     {
-        size_t index = 0;
+        std::size_t index = 0;
         std::vector<int> newSocketsToRemoveIndexes;
         for (auto sock_iter = _newSockets.begin(); sock_iter != _newSockets.end(); ++sock_iter, ++index)
         {
@@ -173,15 +171,15 @@ protected:
             }
         }
 
-        for (int removeIndex : newSocketsToRemoveIndexes)
-            _newSockets.erase(_newSockets.begin() + removeIndex);
+        for (auto it = newSocketsToRemoveIndexes.rbegin(); it != newSocketsToRemoveIndexes.rend(); ++it)
+            _newSockets.erase(_newSockets.begin() + *it);
     }
 
     void Run()
     {
         LOG_DEBUG("misc", "Network Thread Starting");
 
-        _updateTimer.expires_from_now(boost::posix_time::milliseconds(1));
+        _updateTimer.expires_at(std::chrono::steady_clock::now() + std::chrono::milliseconds(1));
         _updateTimer.async_wait([this](boost::system::error_code const&) { Update(); });
         _ioContext.run();
 
@@ -195,7 +193,7 @@ protected:
         if (_stopped)
             return;
 
-        _updateTimer.expires_from_now(boost::posix_time::milliseconds(1));
+        _updateTimer.expires_at(std::chrono::steady_clock::now() + std::chrono::milliseconds(1));
         _updateTimer.async_wait([this](boost::system::error_code const&) { Update(); });
 
         AddNewSockets();
@@ -232,7 +230,7 @@ private:
 
     Acore::Asio::IoContext _ioContext;
     tcp::socket _acceptSocket;
-    Acore::Asio::DeadlineTimer _updateTimer;
+    boost::asio::steady_timer _updateTimer;
 
     bool _proxyHeaderReadingEnabled;
 };
