@@ -58,7 +58,6 @@ enum ShutdownExitCode : uint8
 /// Timers for different object refresh rates
 enum WorldTimers
 {
-    WUPDATE_AUCTIONS,
     WUPDATE_WEATHERS,
     WUPDATE_UPTIME,
     WUPDATE_CORPSES,
@@ -240,15 +239,15 @@ public:
     void SendGlobalMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
     void SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
     bool SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
-    void SendZoneText(uint32 zone, const char* text, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
+    void SendZoneText(uint32 zone, std::string text, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) override;
     void SendServerMessage(ServerMessageType messageID, std::string stringParam = "", Player* player = nullptr) override;
 
     /// Are we in the middle of a shutdown?
     [[nodiscard]] bool IsShuttingDown() const override { return _shutdownTimer > 0; }
     [[nodiscard]] uint32 GetShutDownTimeLeft() const override { return _shutdownTimer; }
-    void ShutdownServ(uint32 time, uint32 options, uint8 exitcode, const std::string& reason = std::string()) override;
+    void ShutdownServ(uint32 time, uint32 options, uint8 exitcode, std::string const& reason = std::string()) override;
     void ShutdownCancel() override;
-    void ShutdownMsg(bool show = false, Player* player = nullptr, const std::string& reason = std::string()) override;
+    void ShutdownMsg(bool show = false, Player* player = nullptr, std::string const& reason = std::string()) override;
     static uint8 GetExitCode() { return _exitCode; }
     static void StopNow(uint8 exitcode) { _stopEvent = true; _exitCode = exitcode; }
     static bool IsStopped() { return _stopEvent; }
@@ -348,7 +347,7 @@ public:
 protected:
     void _UpdateGameTime();
     // callback for UpdateRealmCharacters
-    void _UpdateRealmCharCount(PreparedQueryResult resultCharCount);
+    void _UpdateRealmCharCount(PreparedQueryResult resultCharCount,uint32 accountId);
 
     void InitDailyQuestResetTime();
     void InitWeeklyQuestResetTime();
@@ -367,6 +366,7 @@ private:
     static uint8 _exitCode;
     uint32 _shutdownTimer;
     uint32 _shutdownMask;
+    std::string _shutdownReason;
 
     uint32 _cleaningFlags;
 
