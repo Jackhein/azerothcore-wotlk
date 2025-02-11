@@ -146,7 +146,8 @@ public:
             { "playall",           HandlePlayAllCommand,           SEC_GAMEMASTER,         Console::No  },
             { "skirmish",          HandleSkirmishCommand,          SEC_ADMINISTRATOR,      Console::No  },
             { "mailbox",           HandleMailBoxCommand,           SEC_MODERATOR,          Console::No  },
-            { "string",            HandleStringCommand,            SEC_GAMEMASTER,         Console::No  }
+            { "string",            HandleStringCommand,            SEC_GAMEMASTER,         Console::No  },
+            { "opendoor",          HandleOpenDoorCommand,          SEC_GAMEMASTER,         Console::No  }
         };
 
         return commandTable;
@@ -279,7 +280,7 @@ public:
                 break;
             }
 
-            if (plr->isUsingLfg())
+            if (plr->IsUsingLfg())
             {
                 error = 4;
                 break;
@@ -1991,8 +1992,8 @@ public:
         uint32 mapId;
         uint32 areaId;
         uint32 phase            = 0;
-        char const* areaName    = nullptr;
-        char const* zoneName    = nullptr;
+        std::string areaName    = "";
+        std::string zoneName    = "";
 
         // Guild data print variables defined so that they exist, but are not necessarily used
         uint32 guildId           = 0;
@@ -2324,19 +2325,13 @@ public:
             }
         }
 
-        if (!zoneName)
-        {
+        if (zoneName.empty())
             zoneName = handler->GetAcoreString(LANG_UNKNOWN);
-        }
 
-        if (areaName)
-        {
+        if (!areaName.empty())
             handler->PSendSysMessage(LANG_PINFO_CHR_MAP_WITH_AREA, map->name[locale], zoneName, areaName);
-        }
         else
-        {
             handler->PSendSysMessage(LANG_PINFO_CHR_MAP, map->name[locale], zoneName);
-        }
 
         // Output XVII. - XVIX. if they are not empty
         if (!guildName.empty())
@@ -3021,18 +3016,22 @@ public:
             return false;
         }
 
-        const char* str = sObjectMgr->GetAcoreString(id, locale ? static_cast<LocaleConstant>(*locale) : DEFAULT_LOCALE);
+        std::string str = sObjectMgr->GetAcoreString(id, locale ? static_cast<LocaleConstant>(*locale) : DEFAULT_LOCALE);
+        handler->SendSysMessage(str);
+        return true;
+    }
 
-        if (!strcmp(str, "<error>"))
+    static bool HandleOpenDoorCommand(ChatHandler* handler, Optional<float> range)
+    {
+        if (GameObject* go = handler->GetPlayer()->FindNearestGameObjectOfType(GAMEOBJECT_TYPE_DOOR, range ? *range : 5.0f))
         {
-            handler->PSendSysMessage(LANG_NO_ACORE_STRING_FOUND, id);
+            go->SetGoState(GO_STATE_ACTIVE);
+            handler->PSendSysMessage(LANG_CMD_DOOR_OPENED, go->GetName(), go->GetEntry());
             return true;
         }
-        else
-        {
-            handler->SendSysMessage(str);
-            return true;
-        }
+
+        handler->SendErrorMessage(LANG_CMD_NO_DOOR_FOUND, range ? *range : 5.0f);
+        return false;
     }
 };
 

@@ -597,6 +597,10 @@ struct boss_kaelthas : public BossAI
             Talk(SAY_PHASE2_WEAPON);
             DoCastSelf(SPELL_SUMMON_WEAPONS);
             _phase = PHASE_WEAPONS;
+            scheduler.Schedule(95s, GROUP_PROGRESS_PHASE, [this](TaskContext)
+            {
+                PhaseAllAdvisorsExecute();
+            });
         }, EVENT_PREFIGHT_PHASE5_01);
         ScheduleUniqueTimedEvent(9s, [&]{
             summons.DoForAllSummons([&](WorldObject* summon)
@@ -613,10 +617,6 @@ struct boss_kaelthas : public BossAI
                         }
                     }
                 }
-            });
-            scheduler.Schedule(3min, GROUP_PROGRESS_PHASE, [this](TaskContext)
-            {
-                PhaseAllAdvisorsExecute();
             });
         }, EVENT_PREFIGHT_PHASE5_02);
     }
@@ -817,7 +817,12 @@ struct npc_lord_sanguinar : public advisor_baseAI
 {
     npc_lord_sanguinar(Creature* creature) : advisor_baseAI(creature) { };
 
-    void ScheduleEvents() override {}
+    void ScheduleEvents() override
+    {
+        ScheduleTimedEvent(0s, 2s, [&]{
+            DoCastSelf(SPELL_BELLOWING_ROAR);
+        }, 30s, 40s);
+    }
 };
 
 struct npc_capernian : public advisor_baseAI

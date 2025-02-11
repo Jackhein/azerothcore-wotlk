@@ -1602,6 +1602,7 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 44335 }, [](SpellInfo* spellInfo)
     {
         spellInfo->AuraInterruptFlags |= AURA_INTERRUPT_FLAG_CHANGE_MAP;
+        spellInfo->AttributesCu |= SPELL_ATTR0_CU_SINGLE_AURA_STACK;
     });
 
     ApplySpellFix({
@@ -4854,6 +4855,18 @@ void SpellMgr::LoadSpellInfoCorrections()
     ApplySpellFix({ 26655, 26656 }, [](SpellInfo* spellInfo)
     {
         spellInfo->AuraInterruptFlags &= ~(AURA_INTERRUPT_FLAG_CHANGE_MAP | AURA_INTERRUPT_FLAG_TELEPORTED);
+    });
+
+    // Summon Cyclone
+    ApplySpellFix({ 43112 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->RequiresSpellFocus = 0;
+    });
+
+    // Booming Voice
+    ApplySpellFix({ 40080 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->Effects[EFFECT_0].RealPointsPerLevel = 0;
     });
 
     for (uint32 i = 0; i < GetSpellInfoStoreSize(); ++i)

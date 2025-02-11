@@ -183,6 +183,7 @@ enum WorldBoolConfigs
     CONFIG_ALLOWS_RANK_MOD_FOR_PET_HEALTH,
     CONFIG_MUNCHING_BLIZZLIKE,
     CONFIG_ENABLE_DAZE,
+    CONFIG_SPELL_QUEUE_ENABLED,
     BOOL_CONFIG_VALUE_COUNT
 };
 
@@ -417,8 +418,10 @@ enum WorldIntConfigs
     CONFIG_LFG_KICK_PREVENTION_TIMER,
     CONFIG_CHANGE_FACTION_MAX_MONEY,
     CONFIG_WATER_BREATH_TIMER,
-    CONFIG_AUCTION_HOUSE_SEARCH_TIMEOUT,
     CONFIG_DAILY_RBG_MIN_LEVEL_AP_REWARD,
+    CONFIG_AUCTIONHOUSE_WORKERTHREADS,
+    CONFIG_SPELL_QUEUE_WINDOW,
+    CONFIG_SUNSREACH_COUNTER_MAX,
     INT_CONFIG_VALUE_COUNT
 };
 
@@ -499,6 +502,7 @@ enum Rates
     RATE_REST_INGAME,
     RATE_REST_OFFLINE_IN_TAVERN_OR_CITY,
     RATE_REST_OFFLINE_IN_WILDERNESS,
+    RATE_REST_MAX_BONUS,
     RATE_DAMAGE_FALL,
     RATE_AUCTION_TIME,
     RATE_AUCTION_DEPOSIT,
@@ -514,7 +518,8 @@ enum Rates
     RATE_DURABILITY_LOSS_PARRY,
     RATE_DURABILITY_LOSS_ABSORB,
     RATE_DURABILITY_LOSS_BLOCK,
-    RATE_MOVESPEED,
+    RATE_MOVESPEED_PLAYER,
+    RATE_MOVESPEED_NPC,
     RATE_MISS_CHANCE_MULTIPLIER_TARGET_CREATURE,
     RATE_MISS_CHANCE_MULTIPLIER_TARGET_PLAYER,
     MAX_RATES
@@ -567,7 +572,7 @@ public:
     virtual void SendGlobalMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) = 0;
     virtual void SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) = 0;
     virtual bool SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) = 0;
-    virtual void SendZoneText(uint32 zone, const char* text, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) = 0;
+    virtual void SendZoneText(uint32 zone, std::string text, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL) = 0;
     virtual void SendServerMessage(ServerMessageType messageID, std::string stringParam = "", Player* player = nullptr) = 0;
     [[nodiscard]] virtual bool IsShuttingDown() const = 0;
     [[nodiscard]] virtual uint32 GetShutDownTimeLeft() const = 0;
