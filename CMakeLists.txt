@@ -103,7 +103,7 @@ include(ConfigInstall)
 CU_RUN_HOOK("AFTER_LOAD_CMAKE_MODULES")
 
 find_package(PCHSupport)
-find_package(MySQL REQUIRED)
+find_package(MySQL REQUIRED COMPONENTS lib binary)
 
 if(UNIX AND WITH_PERFTOOLS)
     find_package(Gperftools)
