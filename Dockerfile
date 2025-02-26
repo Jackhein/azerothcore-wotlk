@@ -48,7 +48,7 @@ RUN make clean
 #Create config data
 RUN cp /wotlk/src/server/apps/authserver/authserver.conf.dist /usr/local/etc/authserver.conf
 RUN sed -i "s/DataDir = \"./DataDir = \"\/usr\/local\/data/g" /usr/local/etc/authserver.conf
-RUN cp /wotlk/src/server/apps/authserver/worldserver.conf.dist /usr/local/etc/worldserver.conf
-RUN sed -i "s/DataDir = \"./DataDir = \"\/usr\/local\/data/g" /usr/local/etc/authserver.conf
+RUN cp /wotlk/src/server/apps/worldserver/worldserver.conf.dist /usr/local/etc/worldserver.conf
+RUN sed -i "s/DataDir = \"./DataDir = \"\/usr\/local\/data/g" /usr/local/etc/worldserver.conf
 
 WORKDIR /usr/local/bin
