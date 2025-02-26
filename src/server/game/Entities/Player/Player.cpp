@@ -13679,24 +13679,11 @@ LootItem* Player::StoreLootItem(uint8 lootSlot, Loot* loot, InventoryResult& msg
 
 uint32 Player::CalculateTalentsPoints() const
 {
-    uint32 base_talent = GetLevel() < 10 ? 0 : GetLevel() - 9;
+    uint32 talent_limit = static_cast<uint32>(GetLevel() < 10 ? 0 :
+            GetLevel() - 4 < sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL) - 9 ?
+            GetLevel() - 4 : sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL) - 9);
 
-    uint32 talentPointsForLevel = 0;
-    if (!IsClass(CLASS_DEATH_KNIGHT, CLASS_CONTEXT_TALENT_POINT_CALC) || GetMapId() != 609)
-    {
-        talentPointsForLevel = base_talent;
-    }
-    else
-    {
-        talentPointsForLevel = GetLevel() < 56 ? 0 : GetLevel() - 55;
-        talentPointsForLevel += m_questRewardTalentCount;
-
-        if (talentPointsForLevel > base_talent)
-        {
-            talentPointsForLevel = base_talent;
-        }
-    }
-
+    uint32 talentPointsForLevel = m_questRewardTalentCount < talent_limit ? m_questRewardTalentCount : talent_limit;
     talentPointsForLevel += m_extraBonusTalentCount;
     sScriptMgr->OnPlayerCalculateTalentsPoints(this, talentPointsForLevel);
     return uint32(talentPointsForLevel * sWorld->getRate(RATE_TALENT));
