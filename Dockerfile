@@ -37,6 +37,11 @@ COPY . .
 # Get modules
 WORKDIR /wotlk/modules
 RUN rm -rf mod-*
+RUN git clone https://github.com/Jackhein/mod-event-love-is-in-the-air-60
+RUN git clone https://github.com/Jackhein/mod-event-hallow-s-end-60
+RUN git clone https://github.com/Jackhein/mod-event-lunar-festival-60
+RUN git clone https://github.com/Jackhein/mod-murlocvillage
+RUN git clone https://github.com/azerothcore/mod-transmog
 RUN git clone https://github.com/Jackhein/mod-check-modules-conflicts
 WORKDIR /wotlk/modules/mod-check-modules-conflicts
 RUN bash apply_sql_copy.sh -y
