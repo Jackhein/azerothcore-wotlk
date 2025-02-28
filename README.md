@@ -48,12 +48,17 @@ git push
 Choose branch to test and build image locally:
 ```
 git checkout #branch
-docker build .
+docker build . -t test_image
 ```
 Check for error in build
 Then create the volume:
 ```dockerignore
-docker run 
+docker run -itd test_image:latest bash
+#if necessary add volume to docker network environment
+docker network connect server_azeroth #test_volume
+#if necessary get/update conf file
+docker cp /path/to/*.conf test_volume:/usr/local/etc/
+docker attach test_volume
 ```
     On root of the project run `docker build .`
     Check any error
