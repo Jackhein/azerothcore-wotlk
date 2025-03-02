@@ -13685,7 +13685,7 @@ uint32 Player::CalculateTalentsPoints() const
 
     uint32 talentPointsForLevel = m_questRewardTalentCount < talent_limit ? m_questRewardTalentCount : talent_limit;
     talentPointsForLevel += m_extraBonusTalentCount;
-    sScriptMgr->OnCalculateTalentsPoints(this, talentPointsForLevel);
+    sScriptMgr->OnPlayerCalculateTalentsPoints(this, talentPointsForLevel);
     return uint32(talentPointsForLevel * sWorld->getRate(RATE_TALENT));
 }
 
