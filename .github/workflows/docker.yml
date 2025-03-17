@@ -34,7 +34,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          tags: jackhein/murlocvillage_authserver:${{ steps.date.outputs.date }}
+          tags: jackhein/murlocvillage_worldserver:${{ steps.date.outputs.date }}
           push: true
       -
         name: Image digest
