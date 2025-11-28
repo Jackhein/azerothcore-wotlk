@@ -25,6 +25,11 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# Get maps data (get last release)
+WORKDIR /usr/local/data
+RUN wget https://github.com/wowgaming/client-data/releases/download/v16/data.zip
+RUN unzip data.zip && rm data.zip
+
 # Create app directoy
 WORKDIR /wotlk
 COPY . .

@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -172,6 +172,23 @@ void Player::ApplySpellPowerBonus(int32 amount, bool apply)
     ApplyModUInt32Value(PLAYER_FIELD_MOD_HEALING_DONE_POS, amount, apply);
     for (int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
         ApplyModInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + i, amount, apply);
+}
+
+void Player::ApplySpellDamageBonus(int32 amount, bool apply)
+{
+    apply = _ModifyUInt32(apply, m_baseSpellDamage, amount);
+
+    // For speed just update for client
+    for (int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
+        ApplyModInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + i, amount, apply);
+}
+
+void Player::ApplySpellHealingBonus(int32 amount, bool apply)
+{
+    apply = _ModifyUInt32(apply, m_baseSpellHealing, amount);
+
+    // For speed just update for client
+    ApplyModUInt32Value(PLAYER_FIELD_MOD_HEALING_DONE_POS, amount, apply);
 }
 
 void Player::UpdateSpellDamageAndHealingBonus()
@@ -879,7 +896,7 @@ void Player::UpdateExpertise(WeaponAttackType attack)
     if (attack == RANGED_ATTACK)
         return;
 
-    int32 expertise = int32(GetRatingBonusValue(CR_EXPERTISE));
+    float expertise = GetRatingBonusValue(CR_EXPERTISE);
 
     Item* weapon = GetWeaponForAttack(attack, true);
 
@@ -900,10 +917,12 @@ void Player::UpdateExpertise(WeaponAttackType attack)
     switch (attack)
     {
         case BASE_ATTACK:
-            SetUInt32Value(PLAYER_EXPERTISE, expertise);
+            m_Expertise = expertise;
+            SetUInt32Value(PLAYER_EXPERTISE, int32(expertise));
             break;
         case OFF_ATTACK:
-            SetUInt32Value(PLAYER_OFFHAND_EXPERTISE, expertise);
+            m_OffhandExpertise = expertise;
+            SetUInt32Value(PLAYER_OFFHAND_EXPERTISE, int32(expertise));
             break;
         default:
             break;
@@ -950,9 +969,19 @@ void Player::UpdateManaRegen()
     int32 modManaRegenInterrupt = GetTotalAuraModifier(SPELL_AURA_MOD_MANA_REGEN_INTERRUPT);
     if (modManaRegenInterrupt > 100)
         modManaRegenInterrupt = 100;
-    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER, power_regen_mp5 + CalculatePct(power_regen, modManaRegenInterrupt));
+    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER + AsUnderlyingType(POWER_MANA), power_regen_mp5 + CalculatePct(power_regen, modManaRegenInterrupt));
 
-    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER, power_regen_mp5 + power_regen);
+    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER + AsUnderlyingType(POWER_MANA), power_regen_mp5 + power_regen);
+}
+
+void Player::UpdateEnergyRegen()
+{
+    float regenPerSecond = 10.f;   // +10 energy per second
+    regenPerSecond *= GetTotalAuraMultiplierByMiscValue(SPELL_AURA_MOD_POWER_REGEN_PERCENT, POWER_ENERGY);
+    regenPerSecond += static_cast<float>(GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_POWER_REGEN, POWER_ENERGY)) / static_cast<float>((5 * IN_MILLISECONDS));
+
+    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER + AsUnderlyingType(POWER_ENERGY), regenPerSecond - 10.f);
+    SetStatFloatValue(UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER + AsUnderlyingType(POWER_ENERGY), regenPerSecond - 10.f);
 }
 
 void Player::UpdateRuneRegen(RuneType rune)
