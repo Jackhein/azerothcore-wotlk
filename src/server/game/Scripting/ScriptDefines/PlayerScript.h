@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -55,12 +55,7 @@ enum PlayerHook
     PLAYERHOOK_ON_DUEL_REQUEST,
     PLAYERHOOK_ON_DUEL_START,
     PLAYERHOOK_ON_DUEL_END,
-    PLAYERHOOK_ON_CHAT,
     PLAYERHOOK_ON_BEFORE_SEND_CHAT_MESSAGE,
-    PLAYERHOOK_ON_CHAT_WITH_RECEIVER,
-    PLAYERHOOK_ON_CHAT_WITH_GROUP,
-    PLAYERHOOK_ON_CHAT_WITH_GUILD,
-    PLAYERHOOK_ON_CHAT_WITH_CHANNEL,
     PLAYERHOOK_ON_EMOTE,
     PLAYERHOOK_ON_TEXT_EMOTE,
     PLAYERHOOK_ON_SPELL_CAST,
@@ -208,6 +203,9 @@ enum PlayerHook
     PLAYERHOOK_ON_BEFORE_UPDATE_SKILL,
     PLAYERHOOK_ON_UPDATE_SKILL,
     PLAYERHOOK_CAN_RESURRECT,
+    PLAYERHOOK_ON_CAN_GIVE_LEVEL,
+    PLAYERHOOK_ON_SEND_LIST_INVENTORY,
+    PLAYERHOOK_ON_GIVE_REPUTATION,
     PLAYERHOOK_END
 };
 
@@ -281,6 +279,9 @@ public:
     // Called when a player's reputation rank changes (before it is actually changed)
     virtual void OnPlayerReputationRankChange(Player* /*player*/, uint32 /*factionID*/, ReputationRank /*newRank*/, ReputationRank /*olRank*/, bool /*increased*/) { }
 
+    // Called when a player gains Reputation (before anything is given)
+    virtual void OnPlayerGiveReputation(Player* /*player*/, int32 /*factionID*/, float& /*amount*/, ReputationSource /*repSource*/) { }
+
     // Called when a player learned new spell
     virtual void OnPlayerLearnSpell(Player* /*player*/, uint32 /*spellID*/) {}
 
@@ -297,17 +298,7 @@ public:
     virtual void OnPlayerDuelEnd(Player* /*winner*/, Player* /*loser*/, DuelCompleteType /*type*/) { }
 
     // The following methods are called when a player sends a chat message.
-    virtual void OnPlayerChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/) { }
-
     virtual void OnPlayerBeforeSendChatMessage(Player* /*player*/, uint32& /*type*/, uint32& /*lang*/, std::string& /*msg*/) { }
-
-    virtual void OnPlayerChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/, Player* /*receiver*/) { }
-
-    virtual void OnPlayerChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/, Group* /*group*/) { }
-
-    virtual void OnPlayerChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/, Guild* /*guild*/) { }
-
-    virtual void OnPlayerChat(Player* /*player*/, uint32 /*type*/, uint32 /*lang*/, std::string& /*msg*/, Channel* /*channel*/) { }
 
     // Both of the below are called on emote opcodes.
     virtual void OnPlayerEmote(Player* /*player*/, uint32 /*emote*/) { }
@@ -782,6 +773,25 @@ public:
      * @return true if player is authorized to resurect
      */
     virtual bool OnPlayerCanResurrect(Player* /*player*/) { return true; }
+
+    /**
+     * @brief This hook is called, to cancel the normal level up flow
+     *
+     * @param player Contains information about the Player
+     * @param newLevel The new level the player is about to be given
+     *
+     * @return true if player is allowed to gain the new level
+     */
+    virtual bool OnPlayerCanGiveLevel(Player* /*player*/, uint8 /*newLevel*/) { return true; }
+
+    /**
+     * @brief This hook is called whenever a player interacts with a vendor, and is then shown the vendor list
+     *
+     * @param player Contains information about the Player
+     * @param vendorGuid Guid of the vendor player is interacting with
+     * @param vendorEntry Entry of the vendor player is interacting with
+     */
+    virtual void OnPlayerSendListInventory(Player* /*player*/, ObjectGuid /*vendorGuid*/, uint32& /*vendorEntry*/) {}
 };
 
 #endif
