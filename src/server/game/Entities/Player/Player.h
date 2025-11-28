@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -41,6 +41,7 @@
 #include "TradeData.h"
 #include "Unit.h"
 #include "WorldSession.h"
+#include <set>
 #include <string>
 #include <vector>
 
@@ -187,6 +188,7 @@ struct SpellModifier
     flag96 mask;
     uint32 spellId{0};
     Aura* const ownerAura;
+    uint32 priority{0};
 };
 
 typedef std::unordered_map<uint32, PlayerTalent*> PlayerTalentMap;
@@ -232,17 +234,6 @@ enum ActionButtonType
     ACTION_BUTTON_MACRO     = 0x40,
     ACTION_BUTTON_CMACRO    = ACTION_BUTTON_C | ACTION_BUTTON_MACRO,
     ACTION_BUTTON_ITEM      = 0x80
-};
-
-enum ReputationSource
-{
-    REPUTATION_SOURCE_KILL,
-    REPUTATION_SOURCE_QUEST,
-    REPUTATION_SOURCE_DAILY_QUEST,
-    REPUTATION_SOURCE_WEEKLY_QUEST,
-    REPUTATION_SOURCE_MONTHLY_QUEST,
-    REPUTATION_SOURCE_REPEATABLE_QUEST,
-    REPUTATION_SOURCE_SPELL
 };
 
 enum QuestSound
@@ -458,8 +449,6 @@ typedef std::list<Item*> ItemDurationList;
 
 enum PlayerMovementType
 {
-    MOVE_ROOT       = 1,
-    MOVE_UNROOT     = 2,
     MOVE_WATER_WALK = 3,
     MOVE_LAND_WALK  = 4
 };
@@ -596,6 +585,7 @@ enum PlayerExtraFlags
     PLAYER_EXTRA_SPECTATOR_ON       = 0x0080,               // Marks if player is spectactor
     PLAYER_EXTRA_PVP_DEATH          = 0x0100,               // store PvP death status until corpse creating.
     PLAYER_EXTRA_SHOW_DK_PET        = 0x0400,               // Marks if player should see ghoul on login screen
+    PLAYER_EXTRA_GM_SPECTATOR       = 0x0800,
 };
 
 // 2^n values
@@ -1099,11 +1089,6 @@ public:
         SetFloatValue(UNIT_FIELD_COMBATREACH, scale * DEFAULT_COMBAT_REACH);
     }
 
-    [[nodiscard]] bool hasSpanishClient()
-    {
-        return GetSession()->GetSessionDbLocaleIndex() == LOCALE_esES || GetSession()->GetSessionDbLocaleIndex() == LOCALE_esMX;
-    }
-
     bool TeleportTo(uint32 mapid, float x, float y, float z, float orientation, uint32 options = 0, Unit* target = nullptr, bool newInstance = false);
     bool TeleportTo(WorldLocation const& loc, uint32 options = 0, Unit* target = nullptr)
     {
@@ -1143,8 +1128,8 @@ public:
     void SendInstanceResetWarning(uint32 mapid, Difficulty difficulty, uint32 time, bool onEnterMap);
 
     bool CanInteractWithQuestGiver(Object* questGiver);
-    Creature* GetNPCIfCanInteractWith(ObjectGuid guid, uint32 npcflagmask);
-    [[nodiscard]] GameObject* GetGameObjectIfCanInteractWith(ObjectGuid guid, GameobjectTypes type) const;
+    Creature* GetNPCIfCanInteractWith(ObjectGuid const& guid, uint32 npcflagmask);
+    [[nodiscard]] GameObject* GetGameObjectIfCanInteractWith(ObjectGuid const& guid, GameobjectTypes type) const;
 
     void ToggleAFK();
     void ToggleDND();
@@ -1170,12 +1155,16 @@ public:
     void SetCommentator(bool on) { ApplyModFlag(PLAYER_FLAGS, PLAYER_FLAGS_COMMENTATOR2, on); }
     [[nodiscard]] bool IsDeveloper() const { return HasPlayerFlag(PLAYER_FLAGS_DEVELOPER); }
     void SetDeveloper(bool on) { ApplyModFlag(PLAYER_FLAGS, PLAYER_FLAGS_DEVELOPER, on); }
+    void SetBeastMaster(bool on) { if (on) SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE); else RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE); }
     [[nodiscard]] bool isAcceptWhispers() const { return m_ExtraFlags & PLAYER_EXTRA_ACCEPT_WHISPERS; }
     void SetAcceptWhispers(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_ACCEPT_WHISPERS; else m_ExtraFlags &= ~PLAYER_EXTRA_ACCEPT_WHISPERS; }
     [[nodiscard]] bool IsGameMaster() const { return m_ExtraFlags & PLAYER_EXTRA_GM_ON; }
     void SetGameMaster(bool on);
     [[nodiscard]] bool isGMChat() const { return m_ExtraFlags & PLAYER_EXTRA_GM_CHAT; }
     void SetGMChat(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_GM_CHAT; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_CHAT; }
+    [[nodiscard]] bool IsGMSpectator() const { return m_ExtraFlags & PLAYER_EXTRA_GM_SPECTATOR; }
+    void SetGMSpectator(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_GM_SPECTATOR; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_SPECTATOR; }
+
     [[nodiscard]] bool isTaxiCheater() const { return m_ExtraFlags & PLAYER_EXTRA_TAXICHEAT; }
     void SetTaxiCheater(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_TAXICHEAT; else m_ExtraFlags &= ~PLAYER_EXTRA_TAXICHEAT; }
     [[nodiscard]] bool isGMVisible() const { return !(m_ExtraFlags & PLAYER_EXTRA_GM_INVISIBLE); }
@@ -1221,7 +1210,7 @@ public:
     [[nodiscard]] PetStable const* GetPetStable() const { return m_petStable.get(); }
 
     [[nodiscard]] Pet* GetPet() const;
-    Pet* SummonPet(uint32 entry, float x, float y, float z, float ang, PetType petType, Milliseconds duration = 0s, uint32 healthPct = 0);
+    Pet* SummonPet(uint32 entry, float x, float y, float z, float ang, PetType petType, Milliseconds duration = 0ms, uint32 healthPct = 0);
     void RemovePet(Pet* pet, PetSaveMode mode, bool returnreagent = false);
     bool CanPetResurrect();
     bool IsExistPet();
@@ -1268,7 +1257,7 @@ public:
     bool HasWeapon(WeaponAttackType type) const override { return GetWeaponForAttack(type, false); }
     bool HasWeaponForAttack(WeaponAttackType type) const override { return (Unit::HasWeaponForAttack(type) && GetWeaponForAttack(type, true)); }
     [[nodiscard]] Item* GetShield(bool useable = false) const;
-    static uint8 GetAttackBySlot(uint8 slot);        // MAX_ATTACK if not weapon slot
+    static WeaponAttackType GetAttackBySlot(uint8 slot);        // MAX_ATTACK if not weapon slot
     std::vector<Item*>& GetItemUpdateQueue() { return m_itemUpdateQueue; }
     static bool IsInventoryPos(uint16 pos) { return IsInventoryPos(pos >> 8, pos & 255); }
     static bool IsInventoryPos(uint8 bag, uint8 slot);
@@ -1345,7 +1334,6 @@ public:
     {
         return StoreItem(dest, pItem, update);
     }
-    Item* BankItem(uint16 pos, Item* pItem, bool update);
     void RemoveItem(uint8 bag, uint8 slot, bool update, bool swap = false);
     void MoveItemFromInventory(uint8 bag, uint8 slot, bool update);
     // in trade, auction, guild bank, mail....
@@ -1606,7 +1594,6 @@ public:
     void SetBindPoint(ObjectGuid guid);
     void SendTalentWipeConfirm(ObjectGuid guid);
     void ResetPetTalents();
-    void CalcRage(uint32 damage, bool attacker);
     void RegenerateAll();
     void Regenerate(Powers power);
     void RegenerateHealth();
@@ -1687,7 +1674,7 @@ public:
 
     bool RemoveMItem(ObjectGuid::LowType itemLowGuid)
     {
-        return !!mMitems.erase(itemLowGuid);
+        return mMitems.erase(itemLowGuid);
     }
 
     void PetSpellInitialize();
@@ -1715,6 +1702,7 @@ public:
     void learnQuestRewardedSpells();
     void learnQuestRewardedSpells(Quest const* quest);
     void learnSpellHighRank(uint32 spellid);
+    bool CheckSkillLearnedBySpell(uint32 spellId);
     void SetReputation(uint32 factionentry, float value);
     [[nodiscard]] uint32 GetReputation(uint32 factionentry) const;
     std::string const& GetGuildName();
@@ -1862,7 +1850,7 @@ public:
                 itr->SetPvP(state);
     }
     void UpdatePvP(bool state, bool _override = false);
-    void UpdateZone(uint32 newZone, uint32 newArea);
+    void UpdateZone(uint32 newZone, uint32 newArea, bool force = false);
     void UpdateArea(uint32 newArea);
     void SetNeedZoneUpdate(bool needUpdate) { m_needZoneUpdate = needUpdate; }
 
@@ -1958,6 +1946,8 @@ public:
     void UpdateAttackPowerAndDamage(bool ranged = false) override;
     void UpdateShieldBlockValue();
     void ApplySpellPowerBonus(int32 amount, bool apply);
+    void ApplySpellDamageBonus(int32 amount, bool apply);
+    void ApplySpellHealingBonus(int32 amount, bool apply);
     void UpdateSpellDamageAndHealingBonus();
     void ApplyRatingMod(CombatRating cr, int32 value, bool apply);
     void UpdateRating(CombatRating cr);
@@ -1976,6 +1966,8 @@ public:
     [[nodiscard]] float GetRatingMultiplier(CombatRating cr) const;
     [[nodiscard]] float GetRatingBonusValue(CombatRating cr) const;
     uint32 GetBaseSpellPowerBonus() { return m_baseSpellPower; }
+    uint32 GetBaseSpellDamageBonus() { return m_baseSpellDamage; }
+    uint32 GetBaseSpellHealingBonus() { return m_baseSpellHealing; }
     [[nodiscard]] int32 GetSpellPenetrationItemMod() const { return m_spellPenetrationItemMod; }
 
     [[nodiscard]] float GetExpertiseDodgeOrParryReduction(WeaponAttackType attType) const;
@@ -1995,6 +1987,7 @@ public:
     void ApplyManaRegenBonus(int32 amount, bool apply);
     void ApplyHealthRegenBonus(int32 amount, bool apply);
     void UpdateManaRegen();
+    void UpdateEnergyRegen();
     void UpdateRuneRegen(RuneType rune);
 
     [[nodiscard]] ObjectGuid GetLootGUID() const { return m_lootGuid; }
@@ -2032,7 +2025,6 @@ public:
 
     void SendMessageToSet(WorldPacket const* data, bool self) const override;
     void SendMessageToSetInRange(WorldPacket const* data, float dist, bool self) const override;
-    void SendMessageToSetInRange(WorldPacket const* data, float dist, bool self, bool includeMargin, bool ownTeamOnly, bool required3dDist = false) const;
     void SendMessageToSet(WorldPacket const* data, Player const* skipped_rcvr) const override;
     void SendTeleportAckPacket();
 
@@ -2041,7 +2033,7 @@ public:
     Corpse* CreateCorpse();
     void RemoveCorpse();
     void KillPlayer();
-    static void OfflineResurrect(ObjectGuid const guid, CharacterDatabaseTransaction trans);
+    static void OfflineResurrect(ObjectGuid const& guid, CharacterDatabaseTransaction trans);
     [[nodiscard]] bool HasCorpse() const { return _corpseLocation.GetMapId() != MAPID_INVALID; }
     [[nodiscard]] WorldLocation GetCorpseLocation() const { return _corpseLocation; }
     uint32 GetResurrectionSpellId();
@@ -2066,8 +2058,6 @@ public:
         StopMirrorTimer(FIRE_TIMER);
     }
     bool IsMirrorTimerActive(MirrorTimerType type) { return m_MirrorTimer[type] == getMaxTimer(type); }
-
-    void SetMovement(PlayerMovementType pType);
 
     bool CanJoinConstantChannelInZone(ChatChannelsEntry const* channel, AreaTableEntry const* zone);
 
@@ -2206,6 +2196,10 @@ public:
     void _RemoveAllStatBonuses();
 
     void ResetAllPowers();
+
+    void CastAllObtainSpells();
+    void ApplyItemObtainSpells(Item* item, bool apply);
+    void UpdateItemObtainSpells(Item* item, uint8 bag, uint8 slot);
 
     SpellSchoolMask GetMeleeDamageSchoolMask(WeaponAttackType attackType = BASE_ATTACK, uint8 damageIndex = 0) const override;
 
@@ -2355,6 +2349,7 @@ public:
     void SetMover(Unit* target);
 
     void SetSeer(WorldObject* target) { m_seer = target; }
+    WorldObject* GetSeer() const { return m_seer; }
     void SetViewpoint(WorldObject* target, bool apply);
     [[nodiscard]] WorldObject* GetViewpoint() const;
     void StopCastingCharm(Aura* except = nullptr);
@@ -2386,7 +2381,6 @@ public:
     void SetEntryPoint();
 
     // currently visible objects at player client
-    GuidUnorderedSet m_clientGUIDs;
     std::vector<Unit*> m_newVisible; // pussywizard
 
     [[nodiscard]] bool HaveAtClient(WorldObject const* u) const;
@@ -2554,7 +2548,9 @@ public:
     //bool isActiveObject() const { return true; }
     bool CanSeeSpellClickOn(Creature const* creature) const;
     [[nodiscard]] bool CanSeeVendor(Creature const* creature) const;
-
+private:
+    [[nodiscard]] bool AnyVendorOptionAvailable(uint32 menuId, Creature const* creature) const;
+public:
     [[nodiscard]] uint32 GetChampioningFaction() const { return m_ChampioningFaction; }
     void SetChampioningFaction(uint32 faction) { m_ChampioningFaction = faction; }
     Spell* m_spellModTakingSpell;
@@ -2568,16 +2564,10 @@ public:
     bool IsInWhisperWhiteList(ObjectGuid guid);
     void RemoveFromWhisperWhiteList(ObjectGuid guid) { WhisperList.remove(guid); }
 
-    bool SetDisableGravity(bool disable, bool packetOnly = false, bool updateAnimationTier = true) override;
-    bool SetCanFly(bool apply, bool packetOnly = false) override;
-    bool SetWaterWalking(bool apply, bool packetOnly = false) override;
-    bool SetFeatherFall(bool apply, bool packetOnly = false) override;
-    bool SetHover(bool enable, bool packetOnly = false, bool updateAnimationTier = true) override;
-
     [[nodiscard]] bool CanFly() const override { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_CAN_FLY); }
     [[nodiscard]] bool CanEnterWater() const override { return true; }
+    bool IsFreeFlying() const { return HasAuraType(SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED) || HasAuraType(SPELL_AURA_FLY); }
 
-    // OURS
     // saving
     void AdditionalSavingAddMask(uint8 mask) { m_additionalSaveTimer = 2000; m_additionalSaveMask |= mask; }
     // arena spectator
@@ -2629,16 +2619,26 @@ public:
     [[nodiscard]] Optional<float> GetFarSightDistance() const;
 
     float GetSightRange(WorldObject const* target = nullptr) const override;
+    bool IsWorldObjectOutOfSightRange(WorldObject const* target) const;
 
     std::string GetPlayerName();
 
     // Settings
-    [[nodiscard]] PlayerSetting GetPlayerSetting(std::string source, uint8 index);
-    void UpdatePlayerSetting(std::string source, uint8 index, uint32 value);
+    [[nodiscard]] PlayerSetting GetPlayerSetting(std::string const& source, uint32 index);
+    void UpdatePlayerSetting(std::string const& source, uint32 index, uint32 value);
 
     void SendSystemMessage(std::string_view msg, bool escapeCharacters = false);
 
     std::string GetDebugInfo() const override;
+
+    bool IsExpectingChangeTransport() const { return _expectingChangeTransport; }
+    void SetExpectingChangeTransport(bool state) { _expectingChangeTransport = state; }
+
+    uint32 GetPendingFlightChange() const { return _pendingFlightChangeCounter; }
+    void SetPendingFlightChange(uint32 counter) { _pendingFlightChangeCounter = counter; }
+
+    void SetMapChangeOrderCounter() { _mapChangeOrderCounter = GetSession()->GetOrderCounter(); }
+    uint32 GetMapChangeOrderCounter() { return _mapChangeOrderCounter; }
 
     /*********************************************************/
     /***               SPELL QUEUE SYSTEM                  ***/
@@ -2832,6 +2832,8 @@ protected:
     float m_auraBaseMod[BASEMOD_END][MOD_END];
     int32 m_baseRatingValue[MAX_COMBAT_RATING];
     uint32 m_baseSpellPower;
+    uint32 m_baseSpellDamage;
+    uint32 m_baseSpellHealing;
     uint32 m_baseFeralAP;
     uint32 m_baseManaRegen;
     uint32 m_baseHealthRegen;
@@ -2883,6 +2885,9 @@ protected:
     bool m_canTitanGrip;
     uint8 m_swingErrorMsg;
     float m_ammoDPS;
+
+    float m_Expertise;
+    float m_OffhandExpertise;
 
     ////////////////////Rest System/////////////////////
     time_t _restTime;
@@ -3015,6 +3020,10 @@ private:
     PlayerSettingMap m_charSettingsMap;
 
     Seconds m_creationTime;
+
+    bool _expectingChangeTransport;
+    uint32 _pendingFlightChangeCounter;
+    uint32 _mapChangeOrderCounter;
 };
 
 void AddItemsSetItem(Player* player, Item* item);

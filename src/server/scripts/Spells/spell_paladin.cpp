@@ -1,14 +1,14 @@
 /*
  * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
  *
  * You should have received a copy of the GNU General Public License along
@@ -679,8 +679,9 @@ class spell_pal_glyph_of_holy_light : public SpellScript
 
     void FilterTargets(std::list<WorldObject*>& targets)
     {
-        uint32 const maxTargets = GetSpellInfo()->MaxAffectedTargets;
+        targets.remove(GetExplTargetUnit());
 
+        uint32 const maxTargets = GetSpellInfo()->MaxAffectedTargets;
         if (targets.size() > maxTargets)
         {
             targets.sort(Acore::HealthPctOrderPred());
@@ -1149,6 +1150,36 @@ class spell_pal_seal_of_vengeance : public SpellScript
     }
 };
 
+// 1022 - Hand of Protection
+class spell_pal_hand_of_protection : public SpellScript
+{
+    PrepareSpellScript(spell_pal_hand_of_protection);
+
+    SpellCastResult CheckCast()
+    {
+        Unit* caster = GetCaster();
+
+        if (!caster->GetTarget() || caster->GetTarget() == caster->GetGUID())
+            return SPELL_CAST_OK;
+
+        if (caster->HasStunAura())
+            return SPELL_FAILED_STUNNED;
+
+        if (caster->HasConfuseAura())
+            return SPELL_FAILED_CONFUSED;
+
+        if (caster->GetUnitFlags() & UNIT_FLAG_FLEEING)
+            return SPELL_FAILED_FLEEING;
+
+        return SPELL_CAST_OK;
+    }
+
+    void Register() override
+    {
+        OnCheckCast += SpellCheckCastFn(spell_pal_hand_of_protection::CheckCast);
+    }
+};
+
 void AddSC_paladin_spell_scripts()
 {
     RegisterSpellAndAuraScriptPair(spell_pal_seal_of_command, spell_pal_seal_of_command_aura);
@@ -1177,4 +1208,5 @@ void AddSC_paladin_spell_scripts()
     RegisterSpellScript(spell_pal_righteous_defense);
     RegisterSpellScript(spell_pal_seal_of_righteousness);
     RegisterSpellScript(spell_pal_seal_of_vengeance);
+    RegisterSpellScript(spell_pal_hand_of_protection);
 }
