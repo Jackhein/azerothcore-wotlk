@@ -27,7 +27,7 @@ ENV LC_ALL en_US.UTF-8
 
 # Get maps data (get last release)
 WORKDIR /usr/local/data
-RUN wget https://github.com/wowgaming/client-data/releases/download/v16/data.zip
+RUN wget https://github.com/wowgaming/client-data/releases/download/v18.0/data.zip
 RUN unzip data.zip && rm data.zip
 
 # Create app directoy
